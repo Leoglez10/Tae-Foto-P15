@@ -1,18 +1,42 @@
+let toastTimeout = null;
+function showToast(message, type = "success") {
+  const existing = document.querySelector(".op-toast");
+  if (existing) existing.remove();
+  if (toastTimeout) clearTimeout(toastTimeout);
+
+  const toast = document.createElement("div");
+  toast.className = `op-toast ${type}`;
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  toast.innerHTML = `
+    <span class="op-toast-icon">${type === "success" ? "OK" : "!"}</span>
+    <span class="op-toast-msg">${message}</span>
+  `;
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => toast.classList.add("show"));
+
+  toastTimeout = setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
 function bannerMarkup(flash) {
   if (!flash) return "";
-  return `<div class="status-banner ${flash.tone}">${flash.message}</div>`;
+  return `<div class="status-banner ${flash.tone}" role="alert" aria-live="polite">${flash.message}</div>`;
 }
 
 function operationTypeButtons(currentType, student) {
   const hasActiveLoan = Boolean(student?.prestamo_activo);
   return `
     <div class="mode-toggle" role="tablist" aria-label="Tipo de movimiento">
-      <button class="mode-pill ${currentType === "prestamo" ? "active" : ""}" type="button" data-operation-type="prestamo">
-        <span>Préstamo</span>
+      <button class="mode-pill ${currentType === "prestamo" ? "active" : ""}" type="button" data-operation-type="prestamo" role="tab" aria-selected="${currentType === "prestamo"}" aria-controls="operation-panel">
+        <span>Prestamo</span>
         <small>${hasActiveLoan ? "Ya tiene uno activo" : "Registrar salida"}</small>
       </button>
-      <button class="mode-pill ${currentType === "devolucion" ? "active" : ""}" type="button" data-operation-type="devolucion">
-        <span>Devolución</span>
+      <button class="mode-pill ${currentType === "devolucion" ? "active" : ""}" type="button" data-operation-type="devolucion" role="tab" aria-selected="${currentType === "devolucion"}" aria-controls="operation-panel">
+        <span>Devolucion</span>
         <small>${hasActiveLoan ? "Registrar regreso" : "Sin equipo por devolver"}</small>
       </button>
     </div>
@@ -23,12 +47,12 @@ function studentCard(student) {
   if (!student) {
     return `
       <div class="student-hero empty">
-        <div class="student-avatar">?</div>
+        <div class="student-avatar empty">?</div>
         <div class="student-name-display">
           <h3 class="student-name-empty">Sin alumno seleccionado</h3>
-          <p class="muted">Capture el código y presione Enter</p>
+          <p class="muted">Capture el codigo y presione Enter</p>
         </div>
-        <span class="pill-tag neutral">Esperando código</span>
+        <span class="pill-tag neutral">Esperando codigo</span>
       </div>
     `;
   }
@@ -37,18 +61,18 @@ function studentCard(student) {
   return `
     <div class="student-hero ${hasLoan ? "has-loan" : ""}">
       <div class="student-avatar ${hasLoan ? "warning" : "success"}">
-        ${hasLoan ? "!" : "✓"}
+        ${hasLoan ? "!" : "OK"}
       </div>
       <div class="student-name-display">
         <h3 class="student-name">${student.nombre}</h3>
         <p class="student-info">
-          <span class="info-tag">📚 ${student.materia}</span>
-          <span class="info-tag">👥 ${student.grupo}</span>
-          <span class="info-tag">👨‍🏫 ${student.profesor}</span>
+          <span class="info-tag">${student.materia}</span>
+          <span class="info-tag">${student.grupo}</span>
+          <span class="info-tag">${student.profesor}</span>
         </p>
       </div>
       <span class="pill-tag ${hasLoan ? "warn" : "success"}">
-        ${hasLoan ? "⚠️ CON PRÉSTAMO" : "✅ Disponible"}
+        ${hasLoan ? "CON PRESTAMO" : "Disponible"}
       </span>
       ${hasLoan ? `
         <div class="loan-badge">
@@ -72,12 +96,15 @@ function equipmentOptions(equipment) {
 }
 
 function historyTable(history) {
+  if (!history.length) {
+    return `<div class="empty-state"><div class="empty-state-icon">-</div><p>Sin historial para este alumno</p></div>`;
+  }
   const rows = history
     .map(
       (item) => `
         <tr>
           <td>${item.fecha}</td>
-          <td>${item.tipo.toUpperCase()}</td>
+          <td>${item.tipo === "prestamo" ? '<span class="badge badge-warning">Prestamo</span>' : '<span class="badge badge-success">Devolucion</span>'}</td>
           <td>${item.equipo_numero}</td>
           <td>${item.observaciones || "-"}</td>
         </tr>
@@ -87,11 +114,11 @@ function historyTable(history) {
 
   return `
     <div class="table-wrap">
-      <table>
+      <table aria-label="Historial de operaciones del alumno">
         <thead>
-          <tr><th>Fecha</th><th>Tipo</th><th>Equipo</th><th>Observaciones</th></tr>
+          <tr><th scope="col">Fecha</th><th scope="col">Tipo</th><th scope="col">Equipo</th><th scope="col">Observaciones</th></tr>
         </thead>
-        <tbody>${rows || `<tr><td colspan="4">Sin historial para este alumno.</td></tr>`}</tbody>
+        <tbody>${rows}</tbody>
       </table>
     </div>
   `;
@@ -122,45 +149,46 @@ export function renderOperationView(root, store) {
   const selectPlaceholder = currentType === "devolucion" ? "📥 Devolución automática" : "📦 Seleccione equipo";
 
   root.innerHTML = `
-    <section class="hero-card">
+    <section class="hero-card" aria-label="Resumen del dashboard">
       <div>
-        <h2>📋 Préstamo de Equipos</h2>
-        <p class="muted">Capture el código del aluno y presione Enter</p>
+        <h2>Prestamo de Equipos</h2>
+        <p class="muted">Capture el codigo del alumno y presione Enter</p>
       </div>
-      <div class="hero-stats">
-        <article class="stat">Alumnos<strong>${dashboard.alumnos_activos}</strong></article>
-        <article class="stat">Disponibles<strong>${dashboard.equipos_disponibles}</strong></article>
-        <article class="stat">Prestados<strong>${dashboard.prestamos_activos}</strong></article>
+      <div class="hero-stats" aria-label="Estadisticas">
+        <article class="stat stat-alumnos">Alumnos<strong>${dashboard.alumnos_activos}</strong></article>
+        <article class="stat stat-disponibles">Disponibles<strong>${dashboard.equipos_disponibles}</strong></article>
+        <article class="stat stat-prestados">Prestados<strong>${dashboard.prestamos_activos}</strong></article>
       </div>
     </section>
 
     ${bannerMarkup(state.flash)}
 
-    <section class="operation-layout">
+    <section class="operation-layout" id="operation-panel" role="tabpanel" aria-label="Operacion de prestamo">
       <div class="left-column">
         <article class="panel panel-code">
           <div class="code-input-wrapper">
-            <label for="student-code" class="big-label">Código del Alumno</label>
+            <label for="student-code" class="big-label">Codigo del Alumno</label>
             <input 
               id="student-code" 
               name="codigo" 
               autocomplete="off" 
               class="big-input"
-              placeholder="🔍 Escanear o escribir código..."
+              placeholder="Escanear o escribir codigo..."
               value="${state.selectedStudent?.codigo || ""}"
+              aria-describedby="code-hint"
             />
-            <span class="input-hint">Presione Enter para buscar</span>
+            <span id="code-hint" class="kbd-hint">Presione <kbd>Enter</kbd> para buscar</span>
           </div>
         </article>
 
         ${!hasLoan ? `
-        <article class="panel panel-equipment">
-          <h3>🎯 Seleccionar Equipo</h3>
-          <div class="equipment-grid">
+        <article class="panel panel-equipment" aria-label="Seleccionar equipo">
+          <h3>Seleccionar Equipo</h3>
+          <div class="equipment-grid" role="listbox" aria-label="Equipos disponibles">
             ${availableEquipment.length === 0 
-              ? `<div class="no-equipment">⚠️ No hay equipos disponibles</div>`
+              ? `<div class="no-equipment">No hay equipos disponibles</div>`
               : availableEquipment.map(item => `
-                <button type="button" class="equipment-btn" data-equipment-id="${item.id}">
+                <button type="button" class="equipment-btn" data-equipment-id="${item.id}" role="option" aria-selected="false">
                   <span class="eq-num">${item.numero}</span>
                   <span class="eq-desc">${item.descripcion || ""}</span>
                 </button>
@@ -171,23 +199,24 @@ export function renderOperationView(root, store) {
         </article>
         ` : ""}
 
-        <article class="panel">
-          <h3>📝 Observaciones</h3>
-          <input name="observaciones" id="observaciones" class="obs-input" placeholder="${hasLoan ? "Notas opcionales (devolución)..." : "Notas opcionales..."}" />
+        <article class="panel" aria-label="Observaciones">
+          <h3>Observaciones</h3>
+          <input name="observaciones" id="observaciones" class="obs-input" placeholder="${hasLoan ? "Notas opcionales (devolucion)..." : "Notas opcionales..."}" aria-label="Observaciones adicionales" />
         </article>
 
-        <button class="btn btn-block btn-xl ${submitClass}" id="submit-btn" type="button">
+        <button class="btn btn-block btn-xl ${submitClass}" id="submit-btn" type="button" aria-label="${hasLoan ? "Registrar devolucion" : "Registrar prestamo"}">
           ${submitLabel}
         </button>
+        <p class="kbd-hint" style="text-align: center; margin-top: 8px;">Presione <kbd>Esc</kbd> para limpiar</p>
       </div>
 
       <div class="right-column">
-        <article class="panel panel-student">
+        <article class="panel panel-student" aria-label="Informacion del alumno">
           ${studentCard(state.selectedStudent)}
         </article>
 
-        <article class="panel panel-history">
-          <h3>📜 Historial</h3>
+        <article class="panel panel-history" aria-label="Historial del alumno">
+          <h3>Historial</h3>
           ${historyTable(state.studentHistory)}
         </article>
       </div>
@@ -231,14 +260,18 @@ export function renderOperationView(root, store) {
   });
 
   submitBtn.addEventListener("click", async () => {
+    console.log("[DEBUG] submitBtn clicked", { hasStudent: !!state.selectedStudent, prestamo_activo: state.selectedStudent?.prestamo_activo });
     const currentState = store.getState();
     const equipoId = equipmentInput.value;
     const observaciones = root.querySelector("#observaciones")?.value?.trim() || "";
     const student = currentState.selectedStudent;
 
     if (!student) {
+      console.log("[DEBUG] No student selected, returning");
       return;
     }
+
+    console.log("[DEBUG] Student:", student.codigo, student.prestamo_activo ? "has loan" : "no loan");
 
     if (student.prestamo_activo) {
       const equipoIdDev = student.prestamo_activo.equipo_id;
@@ -248,6 +281,7 @@ export function renderOperationView(root, store) {
         equipo_id: equipoIdDev,
         observaciones: observaciones || null
       });
+      showToast("Equipo devuelto exitosamente", "success");
     } else if (equipoId) {
       await store.actions.registerStudentOperation({
         codigo: student.codigo,
@@ -255,6 +289,7 @@ export function renderOperationView(root, store) {
         equipo_id: Number(equipoId),
         observaciones: observaciones || null
       });
+      showToast("Prestamo registrado", "success");
     }
 
     equipmentInput.value = "";

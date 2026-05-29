@@ -1,11 +1,17 @@
 function bannerMarkup(flash) {
   if (!flash) return "";
-  return `<div class="status-banner ${flash.tone}">${flash.message}</div>`;
+  const icons = {
+    success: "✓",
+    warn: "!",
+    danger: "×"
+  };
+  return `<div class="status-banner ${flash.tone}" role="alert" aria-live="polite">${icons[flash.tone] || "i"} ${flash.message}</div>`;
 }
 
-function sectionButton(label, key, active, helper = "") {
+function sectionButton(label, key, active, helper = "", icon = "") {
   return `
     <button class="dashboard-tile ${active ? "active" : ""}" data-section="${key}" type="button">
+      <span class="tile-icon">${icon}</span>
       <strong>${label}</strong>
       <span>${helper}</span>
     </button>
@@ -13,24 +19,27 @@ function sectionButton(label, key, active, helper = "") {
 }
 
 function studentRows(students) {
+  if (!students.length) {
+    return `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">!</div><p>No hay alumnos registrados</p></div></td></tr>`;
+  }
   return students
     .map(
       (student) => `
         <tr data-student-row data-codigo="${student.codigo}" data-nombre="${student.nombre}" data-materia="${student.materia}" data-profesor="${student.profesor}" data-grupo="${student.grupo}" data-activo="${student.activo ? "1" : "0"}">
-          <td><input data-field="codigo" value="${student.codigo}" /></td>
-          <td><input data-field="nombre" value="${student.nombre}" /></td>
-          <td><input data-field="materia" value="${student.materia}" /></td>
-          <td><input data-field="profesor" value="${student.profesor}" /></td>
-          <td><input data-field="grupo" value="${student.grupo}" /></td>
+          <td><input data-field="codigo" value="${student.codigo}" aria-label="Codigo del alumno" /></td>
+          <td><input data-field="nombre" value="${student.nombre}" aria-label="Nombre" /></td>
+          <td><input data-field="materia" value="${student.materia}" aria-label="Materia" /></td>
+          <td><input data-field="profesor" value="${student.profesor}" aria-label="Profesor" /></td>
+          <td><input data-field="grupo" value="${student.grupo}" aria-label="Grupo" /></td>
           <td>
-            <select data-field="activo">
+            <select data-field="activo" aria-label="Estado">
               <option value="1" ${student.activo ? "selected" : ""}>Activo</option>
               <option value="0" ${student.activo ? "" : "selected"}>Inactivo</option>
             </select>
           </td>
           <td class="actions-cell">
-            <button class="btn-secondary" type="button" data-save-student="${student.id}">Guardar</button>
-            <button class="btn-danger" type="button" data-delete-student="${student.id}">Eliminar</button>
+            <button class="btn-secondary" type="button" data-save-student="${student.id}" aria-label="Guardar cambios del alumno">Guardar</button>
+            <button class="btn-danger" type="button" data-delete-student="${student.id}" aria-label="Eliminar alumno">Eliminar</button>
           </td>
         </tr>
       `
@@ -39,28 +48,31 @@ function studentRows(students) {
 }
 
 function equipmentRows(equipment) {
+  if (!equipment.length) {
+    return `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-icon">!</div><p>No hay equipos registrados</p></div></td></tr>`;
+  }
   return equipment
     .map(
       (item) => `
         <tr data-equipment-row data-numero="${item.numero}" data-tipo="${item.tipo}" data-descripcion="${item.descripcion}" data-estado="${item.estado}" data-activo="${item.activo ? "1" : "0"}">
-          <td><input data-field="numero" value="${item.numero}" /></td>
-          <td><input data-field="tipo" value="${item.tipo}" /></td>
-          <td><input data-field="descripcion" value="${item.descripcion}" /></td>
+          <td><input data-field="numero" value="${item.numero}" aria-label="Numero de equipo" /></td>
+          <td><input data-field="tipo" value="${item.tipo}" aria-label="Tipo" /></td>
+          <td><input data-field="descripcion" value="${item.descripcion}" aria-label="Descripcion" /></td>
           <td>
-            <select data-field="estado">
+            <select data-field="estado" aria-label="Estado">
               <option value="disponible" ${item.estado === "disponible" ? "selected" : ""}>disponible</option>
               <option value="prestado" ${item.estado === "prestado" ? "selected" : ""}>prestado</option>
             </select>
           </td>
           <td>
-            <select data-field="activo">
+            <select data-field="activo" aria-label="Activo">
               <option value="1" ${item.activo ? "selected" : ""}>Activo</option>
               <option value="0" ${item.activo ? "" : "selected"}>Inactivo</option>
             </select>
           </td>
           <td class="actions-cell">
-            <button class="btn-secondary" type="button" data-save-equipment="${item.id}">Guardar</button>
-            <button class="btn-danger" type="button" data-delete-equipment="${item.id}">Eliminar</button>
+            <button class="btn-secondary" type="button" data-save-equipment="${item.id}" aria-label="Guardar cambios del equipo">Guardar</button>
+            <button class="btn-danger" type="button" data-delete-equipment="${item.id}" aria-label="Eliminar equipo">Eliminar</button>
           </td>
         </tr>
       `
@@ -69,22 +81,25 @@ function equipmentRows(equipment) {
 }
 
 function adminRows(admins) {
+  if (!admins.length) {
+    return `<tr><td colspan="5"><div class="empty-state"><div class="empty-state-icon">!</div><p>No hay administradores registrados</p></div></td></tr>`;
+  }
   return admins
     .map(
       (admin) => `
         <tr data-admin-row data-usuario="${admin.usuario}" data-nombre="${admin.nombre}" data-activo="${admin.activo ? "1" : "0"}">
-          <td><input data-field="usuario" value="${admin.usuario}" /></td>
-          <td><input data-field="nombre" value="${admin.nombre}" /></td>
-          <td><input data-field="password" type="password" placeholder="Dejar en blanco para conservar" /></td>
+          <td><input data-field="usuario" value="${admin.usuario}" aria-label="Usuario" /></td>
+          <td><input data-field="nombre" value="${admin.nombre}" aria-label="Nombre" /></td>
+          <td><input data-field="password" type="password" placeholder="Dejar en blanco para conservar" aria-label="Nueva contrasena" /></td>
           <td>
-            <select data-field="activo">
+            <select data-field="activo" aria-label="Estado">
               <option value="1" ${admin.activo ? "selected" : ""}>Activo</option>
               <option value="0" ${admin.activo ? "" : "selected"}>Inactivo</option>
             </select>
           </td>
           <td class="actions-cell">
-            <button class="btn-secondary" type="button" data-save-admin="${admin.id}">Guardar</button>
-            <button class="btn-danger" type="button" data-delete-admin="${admin.id}">Eliminar</button>
+            <button class="btn-secondary" type="button" data-save-admin="${admin.id}" aria-label="Guardar cambios del administrador">Guardar</button>
+            <button class="btn-danger" type="button" data-delete-admin="${admin.id}" aria-label="Eliminar administrador">Eliminar</button>
           </td>
         </tr>
       `
@@ -93,12 +108,19 @@ function adminRows(admins) {
 }
 
 function recordRows(records) {
+  if (!records.length) {
+    return `<tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon">!</div><p>No hay registros en el historial</p></div></td></tr>`;
+  }
   return records
     .map(
-      (item) => `
+      (item) => {
+        const tipoBadge = item.tipo === "prestamo"
+          ? '<span class="badge badge-warning">Prestamo</span>'
+          : '<span class="badge badge-success">Devolucion</span>';
+        return `
         <tr data-record-row data-tipo="${item.tipo}" data-codigo="${item.codigo}" data-nombre="${item.alumno_nombre}" data-materia="${item.materia}" data-profesor="${item.profesor}" data-grupo="${item.grupo}" data-equipo="${item.equipo_numero}" data-observaciones="${item.observaciones || ""}">
           <td>${item.fecha}</td>
-          <td>${item.tipo.toUpperCase()}</td>
+          <td>${tipoBadge}</td>
           <td>${item.codigo}</td>
           <td>${item.alumno_nombre}</td>
           <td>${item.materia}</td>
@@ -107,28 +129,30 @@ function recordRows(records) {
           <td>${item.equipo_numero}</td>
           <td>${item.observaciones || "-"}</td>
         </tr>
-      `
+      `;
+      }
     )
     .join("");
 }
 
 function reportRows(reportData) {
   if (!reportData) {
-    return `<tr><td colspan="3">Seleccione un reporte y presione consultar.</td></tr>`;
+    return `<tr><td colspan="3"><div class="empty-state"><div class="empty-state-icon">i</div><p>Seleccione un reporte y presione consultar</p></div></td></tr>`;
   }
-  return (
-    reportData.filas
-      .map(
-        (item) => `
-          <tr>
-            <td>${item.etiqueta}</td>
-            <td>${item.valor}</td>
-            <td>${item.detalle}</td>
-          </tr>
-        `
-      )
-      .join("") || `<tr><td colspan="3">Sin resultados.</td></tr>`
-  );
+  if (!reportData.filas || !reportData.filas.length) {
+    return `<tr><td colspan="3"><div class="empty-state"><div class="empty-state-icon">-</div><p>Sin resultados para este reporte</p></div></td></tr>`;
+  }
+  return reportData.filas
+    .map(
+      (item) => `
+        <tr>
+          <td>${item.etiqueta}</td>
+          <td><strong>${item.valor}</strong></td>
+          <td>${item.detalle}</td>
+        </tr>
+      `
+    )
+    .join("");
 }
 
 function reportPreviewModal(state) {
@@ -152,24 +176,24 @@ function reportPreviewModal(state) {
         <div class="report-preview-sheet">
           <div class="report-preview-head">
             <div>
-              <p class="eyebrow">Vista previa antes de descargar</p>
+              <p class="eyebrow">👁️ Vista previa antes de descargar</p>
               <h3 id="report-preview-title">${state.reportData.titulo}</h3>
             </div>
-            <div class="report-preview-stamp">PDF</div>
+            <div class="report-preview-stamp">📄 PDF</div>
           </div>
-          <p class="muted">Generado: ${state.reportData.generado_en}</p>
+          <p class="muted">📅 Generado: ${state.reportData.generado_en}</p>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Concepto</th><th>Total</th><th>Detalle</th></tr></thead>
-              <tbody>${rows || `<tr><td colspan="3">Sin resultados.</td></tr>`}</tbody>
+              <thead><tr><th>📊 Concepto</th><th>🔢 Total</th><th>📝 Detalle</th></tr></thead>
+              <tbody>${rows || `<tr><td colspan="3">📭 Sin resultados.</td></tr>`}</tbody>
             </table>
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn-secondary" type="button" data-print-report-preview="true" ${state.generatingReport ? "disabled" : ""}>Imprimir vista</button>
-          <button class="ghost-btn" type="button" data-close-report-preview="true" ${state.generatingReport ? "disabled" : ""}>Cerrar</button>
-          <button class="btn" type="button" data-generate-report-from-preview="true" ${state.generatingReport ? "disabled" : ""}>
-            ${state.generatingReport ? "Generando..." : "Generar PDF"}
+          <button class="btn-secondary" type="button" data-print-report-preview="true" ${state.generatingReport ? "disabled" : ""}>🖨️ Imprimir vista</button>
+          <button class="ghost-btn" type="button" data-close-report-preview="true" ${state.generatingReport ? "disabled" : ""}>❌ Cerrar</button>
+          <button class="btn" type="button" data-generate-report-from-preview="true" ${state.generatingReport ? "disabled" : ""} style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%);">
+            ${state.generatingReport ? "⏳ Generando..." : "📄 Generar PDF"}
           </button>
         </div>
       </div>
@@ -292,11 +316,11 @@ function dashboardSummary(summary, activeAdmins) {
   if (!summary) return "";
   return `
     <div class="summary-grid">
-      <article class="stat">Alumnos<strong>${summary.alumnos_activos}</strong></article>
-      <article class="stat">Disponibles<strong>${summary.equipos_disponibles}</strong></article>
-      <article class="stat">Prestados<strong>${summary.prestamos_activos}</strong></article>
-      <article class="stat">Registros<strong>${summary.registros_totales}</strong></article>
-      <article class="stat">Admins<strong>${activeAdmins}</strong></article>
+      <article class="stat stat-alumnos"><span style="font-size: 1.5rem;">👥</span> Alumnos<strong>${summary.alumnos_activos}</strong></article>
+      <article class="stat stat-disponibles"><span style="font-size: 1.5rem;">✅</span> Disponibles<strong>${summary.equipos_disponibles}</strong></article>
+      <article class="stat stat-prestados"><span style="font-size: 1.5rem;">📦</span> Prestados<strong>${summary.prestamos_activos}</strong></article>
+      <article class="stat stat-registros"><span style="font-size: 1.5rem;">📋</span> Registros<strong>${summary.registros_totales}</strong></article>
+      <article class="stat stat-admins"><span style="font-size: 1.5rem;">👤</span> Admins<strong>${activeAdmins}</strong></article>
     </div>
   `;
 }
@@ -469,85 +493,89 @@ function importSection(state) {
           .map(
             (item) => `
               <tr>
-                <td>${item.file_name}</td>
-                <td>${item.modified_at}</td>
-                <td>${Math.max(1, Math.round(item.size_bytes / 1024))} KB</td>
-                <td><button class="ghost-btn" type="button" data-open-backup="${item.path}">Abrir</button></td>
+                <td>📄 ${item.file_name}</td>
+                <td>📅 ${item.modified_at}</td>
+                <td>💾 ${Math.max(1, Math.round(item.size_bytes / 1024))} KB</td>
+                <td><button class="ghost-btn" type="button" data-open-backup="${item.path}">📂 Abrir</button></td>
               </tr>
             `
           )
           .join("")
-      : `<tr><td colspan="4">Sin respaldos todavía.</td></tr>`;
+      : `<tr><td colspan="4">📭 Sin respaldos todavía.</td></tr>`;
 
   const summary = state.importSummary
     ? `
       <div class="import-summary">
         <div class="import-summary-head">
           <div>
-            <p class="eyebrow">Archivo importado</p>
+            <p class="eyebrow">📊 Archivo importado</p>
             <h3>${state.importSummary.archivo}</h3>
           </div>
-          <div class="import-badge">${state.importSummary.formato || "-"}</div>
+          <div class="import-badge">📄 ${state.importSummary.formato || "-"}</div>
         </div>
         <div class="import-metrics">
           <article class="import-metric">
-            <span>Alumnos insertados</span>
+            <span>📥 Alumnos insertados</span>
             <strong>${state.importSummary.alumnos_insertados}</strong>
           </article>
           <article class="import-metric">
-            <span>Alumnos actualizados</span>
+            <span>🔄 Alumnos actualizados</span>
             <strong>${state.importSummary.alumnos_actualizados}</strong>
           </article>
           <article class="import-metric">
-            <span>Alumnos omitidos</span>
+            <span>⏭️ Alumnos omitidos</span>
             <strong>${state.importSummary.alumnos_omitidos}</strong>
           </article>
           <article class="import-metric">
-            <span>Grupos insertados</span>
+            <span>📥 Grupos insertados</span>
             <strong>${state.importSummary.grupos_insertados ?? 0}</strong>
           </article>
           <article class="import-metric">
-            <span>Grupos actualizados</span>
+            <span>🔄 Grupos actualizados</span>
             <strong>${state.importSummary.grupos_actualizados ?? 0}</strong>
           </article>
           <article class="import-metric">
-            <span>Grupos omitidos</span>
+            <span>⏭️ Grupos omitidos</span>
             <strong>${state.importSummary.grupos_omitidos ?? 0}</strong>
           </article>
         </div>
         <div class="import-sheet-row">
-          <span class="import-sheet-label">Hojas validadas</span>
+          <span class="import-sheet-label">📋 Hojas validadas</span>
           <div class="import-chip-row">
             ${
               Array.isArray(state.importSummary.hojas_validadas) && state.importSummary.hojas_validadas.length
                 ? state.importSummary.hojas_validadas
-                    .map((sheet) => `<span class="import-chip">${sheet}</span>`)
+                    .map((sheet) => `<span class="import-chip">📄 ${sheet}</span>`)
                     .join("")
-                : `<span class="import-chip muted-chip">-</span>`
+                : `<span class="import-chip muted-chip">❌ -</span>`
             }
           </div>
         </div>
       </div>
     `
-    : `<div class="import-summary soft"><p>La app acepta <strong>ALUMNOS</strong>, <strong>GRUPOS</strong> o ambas. Tambien conserva el formato legado <strong>GRUPOS + REGISTRO</strong>. Si cambian columnas, nombres o el orden esperado, el archivo se rechaza.</p></div>`;
+    : `<div class="import-summary soft"><p>📋 La app acepta <strong>ALUMNOS</strong>, <strong>GRUPOS</strong> o ambas. Tambien conserva el formato legado <strong>GRUPOS + REGISTRO</strong>. Si cambian columnas, nombres o el orden esperado, el archivo se rechaza.</p></div>`;
 
   return `
     <div class="admin-stack">
-      <div class="panel">
-        <div class="section-head">
+      <div class="panel panel-import">
+        <div class="panel-header-icon">
+          <div class="icon-circle">📥</div>
           <div>
             <h3>Importar Excel</h3>
-            <p class="muted">Carga un archivo con hojas separadas o el formato legado, sin renombrar columnas ni hojas.</p>
+            <p>Carga un archivo con hojas separadas o el formato legado, sin renombrar columnas ni hojas.</p>
           </div>
+        </div>
+        <div class="section-head">
+          <div></div>
           <div class="hero-actions">
             <label class="file-picker">
               <input id="excel-file" type="file" accept=".xlsx,.xlsm" />
-              <span class="btn">Seleccionar Excel</span>
+              <span class="btn">📊 Seleccionar Excel</span>
             </label>
-            <button class="btn-secondary" type="button" data-backup-database="true">Respaldar base</button>
+            <button class="btn-secondary" type="button" data-backup-database="true">💾 Respaldar base</button>
             <label class="file-picker">
               <input id="database-file" type="file" accept=".sqlite,.db" />
-              <span class="ghost-btn">Restaurar base</span>
+              <span class="ghost-btn">🔄 Restaurar base</span>
             </label>
           </div>
         </div>
@@ -555,25 +583,31 @@ function importSection(state) {
       </div>
       <div class="spec-grid">
         <article class="panel">
-          <h3>Especificaciones</h3>
+          <div class="panel-header-icon">
+            <div class="icon-circle">📋</div>
+            <div>
+              <h3>Especificaciones</h3>
+              <p>Formatos y reglas de importación</p>
+            </div>
+          </div>
           <ul class="spec-list">
-            <li>Solo se aceptan archivos <strong>.xlsx</strong> y <strong>.xlsm</strong>.</li>
-            <li>Puedes subir solo <strong>ALUMNOS</strong>, solo <strong>GRUPOS</strong> o ambas hojas en el mismo libro.</li>
-            <li>La hoja <strong>ALUMNOS</strong> debe tener: <strong>Código</strong>, <strong>Nombre</strong>, <strong>Materia</strong>, <strong>Profesor(a)</strong> y <strong>Grupo</strong>.</li>
-            <li>La hoja <strong>GRUPOS</strong> debe tener: <strong>Grupo</strong>, <strong>Turno</strong> y <strong>Ciclo escolar</strong>. El turno debe ser <strong>MAT</strong> o <strong>VES</strong>.</li>
-            <li>Tambien se acepta el formato legado con <strong>GRUPOS</strong> y <strong>REGISTRO</strong>.</li>
-            <li>Si el codigo del alumno ya existe, se actualiza; si no, se crea. Si el grupo ya existe por grupo, turno y ciclo, se actualiza; si no, se crea.</li>
-            <li><strong>Respaldar base</strong> crea una copia completa de la base actual en la carpeta de respaldos de la app.</li>
-            <li><strong>Restaurar base</strong> reemplaza la base actual por un archivo <strong>.sqlite</strong> o <strong>.db</strong> válido y genera un respaldo automático antes.</li>
+            <li>📄 Solo se aceptan archivos <strong>.xlsx</strong> y <strong>.xlsm</strong>.</li>
+            <li>📋 Puedes subir solo <strong>ALUMNOS</strong>, solo <strong>GRUPOS</strong> o ambas hojas en el mismo libro.</li>
+            <li>📄 La hoja <strong>ALUMNOS</strong> debe tener: <strong>Código</strong>, <strong>Nombre</strong>, <strong>Materia</strong>, <strong>Profesor(a)</strong> y <strong>Grupo</strong>.</li>
+            <li>📄 La hoja <strong>GRUPOS</strong> debe tener: <strong>Grupo</strong>, <strong>Turno</strong> y <strong>Ciclo escolar</strong>. El turno debe ser <strong>MAT</strong> o <strong>VES</strong>.</li>
+            <li>📋 Tambien se acepta el formato legado con <strong>GRUPOS</strong> y <strong>REGISTRO</strong>.</li>
+            <li>🔄 Si el codigo del alumno ya existe, se actualiza; si no, se crea. Si el grupo ya existe por grupo, turno y ciclo, se actualiza; si no, se crea.</li>
+            <li>💾 <strong>Respaldar base</strong> crea una copia completa de la base actual en la carpeta de respaldos de la app.</li>
+            <li>🔄 <strong>Restaurar base</strong> reemplaza la base actual por un archivo <strong>.sqlite</strong> o <strong>.db</strong> válido y genera un respaldo automático antes.</li>
           </ul>
         </article>
         <article class="panel">
           <div class="section-head">
             <div>
-              <h3>Historial de respaldos</h3>
-              <p class="muted">Carpeta: ${state.backups?.directory || "No disponible"}</p>
+              <h3>📂 Historial de respaldos</h3>
+              <p class="muted">📁 Carpeta: ${state.backups?.directory || "No disponible"}</p>
             </div>
-            <button class="ghost-btn" type="button" data-open-backups-folder="${state.backups?.directory || ""}">Abrir carpeta</button>
+            <button class="ghost-btn" type="button" data-open-backups-folder="${state.backups?.directory || ""}">📂 Abrir carpeta</button>
           </div>
           <div class="table-wrap compact-table">
             <table>
@@ -583,10 +617,16 @@ function importSection(state) {
           </div>
         </article>
         <article class="panel">
-          <h3>Ejemplo ALUMNOS</h3>
+          <div class="panel-header-icon">
+            <div class="icon-circle">📄</div>
+            <div>
+              <h3>Ejemplo ALUMNOS</h3>
+              <p>Formato esperado para la hoja de alumnos</p>
+            </div>
+          </div>
           <div class="table-wrap compact-table">
             <table>
-              <thead><tr><th>Código</th><th>Nombre</th><th>Materia</th><th>Profesor(a)</th><th>Grupo</th></tr></thead>
+              <thead><tr><th>🔢 Código</th><th>👤 Nombre</th><th>📚 Materia</th><th>👨‍🏫 Profesor(a)</th><th>🏫 Grupo</th></tr></thead>
               <tbody>
                 <tr><td>240145</td><td>María Pérez</td><td>Fotografía</td><td>Laura Soto</td><td>5AV</td></tr>
                 <tr><td>240146</td><td>Diego Núñez</td><td>Iluminación</td><td>Rafael Cruz</td><td>5AV</td></tr>
@@ -594,10 +634,10 @@ function importSection(state) {
               </tbody>
             </table>
           </div>
-          <h3 style="margin-top: 20px;">Ejemplo GRUPOS</h3>
+          <h3 style="margin-top: 20px;">📋 Ejemplo GRUPOS</h3>
           <div class="table-wrap compact-table">
             <table>
-              <thead><tr><th>Grupo</th><th>Turno</th><th>Ciclo escolar</th></tr></thead>
+              <thead><tr><th>🏫 Grupo</th><th>🕐 Turno</th><th>📅 Ciclo escolar</th></tr></thead>
               <tbody>
                 <tr><td>5AV</td><td>MAT</td><td>2025-2026</td></tr>
                 <tr><td>5BV</td><td>VES</td><td>2025-2026</td></tr>
@@ -605,7 +645,7 @@ function importSection(state) {
               </tbody>
             </table>
           </div>
-          <p class="muted" style="margin-top: 12px;">Formato legado: si subes <strong>GRUPOS + REGISTRO</strong>, se sigue validando como antes.</p>
+          <p class="muted" style="margin-top: 12px;">📋 Formato legado: si subes <strong>GRUPOS + REGISTRO</strong>, se sigue validando como antes.</p>
         </article>
       </div>
     </div>
@@ -616,13 +656,19 @@ function studentsSection(state) {
   return `
     <div class="admin-grid wide">
       <article class="panel">
-        <h3>Agregar alumno</h3>
-        <form id="student-create-form" class="form-grid">
-          <label>Código<input name="codigo" required /></label>
-          <label>Nombre<input name="nombre" required /></label>
-          <label>Materia<input name="materia" required /></label>
-          <label>Profesor<input name="profesor" required /></label>
-          <label>Grupo<input name="grupo" required /></label>
+        <div class="panel-header-icon">
+          <div class="icon-circle">+</div>
+          <div>
+            <h3>Agregar alumno</h3>
+            <p>Registra un nuevo alumno en el sistema</p>
+          </div>
+        </div>
+        <form id="student-create-form" class="form-grid" aria-label="Formulario para agregar alumno">
+          <label for="new-student-codigo">Codigo<input id="new-student-codigo" name="codigo" required /></label>
+          <label for="new-student-nombre">Nombre<input id="new-student-nombre" name="nombre" required /></label>
+          <label for="new-student-materia">Materia<input id="new-student-materia" name="materia" required /></label>
+          <label for="new-student-profesor">Profesor<input id="new-student-profesor" name="profesor" required /></label>
+          <label for="new-student-grupo">Grupo<input id="new-student-grupo" name="grupo" required /></label>
           <button class="btn" type="submit">Agregar alumno</button>
         </form>
       </article>
@@ -635,17 +681,29 @@ function studentsSection(state) {
           <button class="ghost-btn" type="button" data-reset-filters="students">Limpiar filtros</button>
         </div>
         <div class="toolbar-filters">
-          <input id="student-search" placeholder="Buscar alumno" />
-          <select id="student-status-filter">
+          <div class="search-highlight" style="position:relative;">
+            <input id="student-search" placeholder="Buscar alumno" aria-label="Buscar alumno por codigo, nombre, materia" />
+          </div>
+          <select id="student-status-filter" aria-label="Filtrar por estado">
             <option value="all">Todos</option>
             <option value="active">Activos</option>
             <option value="inactive">Inactivos</option>
           </select>
         </div>
         <div class="table-wrap">
-          <table id="students-table">
-            <thead><tr><th>Código</th><th>Nombre</th><th>Materia</th><th>Profesor</th><th>Grupo</th><th>Estado</th><th>Acciones</th></tr></thead>
-            <tbody>${studentRows(state.students) || `<tr><td colspan="7">Sin alumnos.</td></tr>`}</tbody>
+          <table id="students-table" role="grid" aria-label="Tabla de alumnos">
+            <thead>
+              <tr>
+                <th scope="col">Codigo</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Materia</th>
+                <th scope="col">Profesor</th>
+                <th scope="col">Grupo</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>${studentRows(state.students)}</tbody>
           </table>
         </div>
       </article>
@@ -657,14 +715,20 @@ function equipmentSection(state) {
   return `
     <div class="admin-grid wide">
       <article class="panel">
-        <h3>Agregar equipo</h3>
-        <form id="equipment-create-form" class="form-grid">
-          <label>Número<input name="numero" required /></label>
-          <label>Tipo<input name="tipo" placeholder="Ej: Cámara, Lente..." required /></label>
-          <label>Descripción<input name="descripcion" required /></label>
-          <label>
+        <div class="panel-header-icon">
+          <div class="icon-circle">+</div>
+          <div>
+            <h3>Agregar equipo</h3>
+            <p>Registra un nuevo equipo en el inventario</p>
+          </div>
+        </div>
+        <form id="equipment-create-form" class="form-grid" aria-label="Formulario para agregar equipo">
+          <label for="new-equipment-numero">Numero<input id="new-equipment-numero" name="numero" required /></label>
+          <label for="new-equipment-tipo">Tipo<input id="new-equipment-tipo" name="tipo" placeholder="Ej: Camara, Lente" required /></label>
+          <label for="new-equipment-descripcion">Descripcion<input id="new-equipment-descripcion" name="descripcion" required /></label>
+          <label for="new-equipment-estado">
             Estado
-            <select name="estado">
+            <select id="new-equipment-estado" name="estado">
               <option value="disponible">disponible</option>
               <option value="prestado">prestado</option>
             </select>
@@ -681,29 +745,33 @@ function equipmentSection(state) {
           <button class="ghost-btn" type="button" data-reset-filters="equipment">Limpiar filtros</button>
         </div>
         <div class="toolbar-filters three-up">
-          <input id="equipment-search" placeholder="Buscar equipo" />
-          <select id="equipment-status-filter">
+          <div class="search-highlight" style="position:relative;">
+            <input id="equipment-search" placeholder="Buscar equipo" aria-label="Buscar equipo por numero, tipo, descripcion" />
+          </div>
+          <select id="equipment-status-filter" aria-label="Filtrar por estado del equipo">
             <option value="all">Todos los estados</option>
             <option value="disponible">Disponibles</option>
             <option value="prestado">Prestados</option>
           </select>
-          <select id="equipment-active-filter">
+          <select id="equipment-active-filter" aria-label="Filtrar por estado activo">
             <option value="all">Activos e inactivos</option>
             <option value="active">Solo activos</option>
             <option value="inactive">Solo inactivos</option>
           </select>
         </div>
         <div class="table-wrap">
-          <table id="equipment-table">
-            <thead><tr>
-              <th data-sort-col="numero" class="sortable-th">Número <span class="sort-arrow">↕</span></th>
-              <th data-sort-col="tipo" class="sortable-th">Tipo <span class="sort-arrow">↕</span></th>
-              <th data-sort-col="descripcion" class="sortable-th">Descripción <span class="sort-arrow">↕</span></th>
-              <th data-sort-col="estado" class="sortable-th">Estado <span class="sort-arrow">↕</span></th>
-              <th data-sort-col="activo" class="sortable-th">Activo <span class="sort-arrow">↕</span></th>
-              <th>Acciones</th>
-            </tr></thead>
-            <tbody>${equipmentRows(state.equipment) || `<tr><td colspan="6">Sin equipos.</td></tr>`}</tbody>
+          <table id="equipment-table" role="grid" aria-label="Tabla de equipos">
+            <thead>
+              <tr>
+                <th scope="col" data-sort-col="numero" class="sortable-th">Numero <span class="sort-arrow">↕</span></th>
+                <th scope="col" data-sort-col="tipo" class="sortable-th">Tipo <span class="sort-arrow">↕</span></th>
+                <th scope="col" data-sort-col="descripcion" class="sortable-th">Descripcion <span class="sort-arrow">↕</span></th>
+                <th scope="col" data-sort-col="estado" class="sortable-th">Estado <span class="sort-arrow">↕</span></th>
+                <th scope="col" data-sort-col="activo" class="sortable-th">Activo <span class="sort-arrow">↕</span></th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>${equipmentRows(state.equipment)}</tbody>
           </table>
         </div>
       </article>
@@ -715,11 +783,17 @@ function adminsSection(state) {
   return `
     <div class="admin-grid wide">
       <article class="panel">
-        <h3>Agregar administrador</h3>
-        <form id="admin-create-form" class="form-grid">
-          <label>Usuario<input name="usuario" required /></label>
-          <label>Nombre<input name="nombre" required /></label>
-          <label>Contraseña<input name="password" type="password" required /></label>
+        <div class="panel-header-icon">
+          <div class="icon-circle">+</div>
+          <div>
+            <h3>Agregar administrador</h3>
+            <p>Registra un nuevo administrador en el sistema</p>
+          </div>
+        </div>
+        <form id="admin-create-form" class="form-grid" aria-label="Formulario para agregar administrador">
+          <label for="new-admin-usuario">Usuario<input id="new-admin-usuario" name="usuario" required /></label>
+          <label for="new-admin-nombre">Nombre<input id="new-admin-nombre" name="nombre" required /></label>
+          <label for="new-admin-password">Contrasena<input id="new-admin-password" name="password" type="password" required /></label>
           <button class="btn" type="submit">Agregar administrador</button>
         </form>
       </article>
@@ -732,17 +806,27 @@ function adminsSection(state) {
           <button class="ghost-btn" type="button" data-reset-filters="admins">Limpiar filtros</button>
         </div>
         <div class="toolbar-filters">
-          <input id="admin-search" placeholder="Buscar administrador" />
-          <select id="admin-status-filter">
+          <div class="search-highlight" style="position:relative;">
+            <input id="admin-search" placeholder="Buscar administrador" aria-label="Buscar administrador por usuario o nombre" />
+          </div>
+          <select id="admin-status-filter" aria-label="Filtrar por estado">
             <option value="all">Todos</option>
             <option value="active">Activos</option>
             <option value="inactive">Inactivos</option>
           </select>
         </div>
         <div class="table-wrap">
-          <table id="admins-table">
-            <thead><tr><th>Usuario</th><th>Nombre</th><th>Nueva contraseña</th><th>Estado</th><th>Acciones</th></tr></thead>
-            <tbody>${adminRows(state.admins) || `<tr><td colspan="5">Sin administradores.</td></tr>`}</tbody>
+          <table id="admins-table" role="grid" aria-label="Tabla de administradores">
+            <thead>
+              <tr>
+                <th scope="col">Usuario</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Nueva contrasena</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>${adminRows(state.admins)}</tbody>
           </table>
         </div>
       </article>
@@ -753,13 +837,19 @@ function adminsSection(state) {
 function recordsSection(state) {
   return `
     <div class="admin-grid wide">
-      <article class="panel">
-        <h3>Filtros de registros</h3>
-        <form id="records-filter-form" class="form-grid">
-          <label>Alumno<input name="alumno_query" value="${state.recordFilters.alumno_query || ""}" placeholder="Código o nombre" /></label>
+      <article class="panel panel-records">
+        <div class="panel-header-icon">
+          <div class="icon-circle">?</div>
+          <div>
+            <h3>Filtros de registros</h3>
+            <p>Busca registros por alumno o rango de fechas</p>
+          </div>
+        </div>
+        <form id="records-filter-form" class="form-grid" aria-label="Formulario para filtrar registros">
+          <label for="records-alumno">Alumno<input id="records-alumno" name="alumno_query" value="${state.recordFilters.alumno_query || ""}" placeholder="Codigo o nombre del alumno" /></label>
           <div class="two-col">
-            <label>Fecha inicio<input type="date" name="fecha_inicio" value="${state.recordFilters.fecha_inicio || ""}" /></label>
-            <label>Fecha fin<input type="date" name="fecha_fin" value="${state.recordFilters.fecha_fin || ""}" /></label>
+            <label for="records-fecha-inicio">Fecha inicio<input type="date" id="records-fecha-inicio" name="fecha_inicio" value="${state.recordFilters.fecha_inicio || ""}" /></label>
+            <label for="records-fecha-fin">Fecha fin<input type="date" id="records-fecha-fin" name="fecha_fin" value="${state.recordFilters.fecha_fin || ""}" /></label>
           </div>
           <button class="btn" type="submit">Filtrar</button>
         </form>
@@ -767,27 +857,41 @@ function recordsSection(state) {
       <article class="panel">
         <div class="section-head">
           <div>
-            <h3>Registros</h3>
+            <h3>Historial de Registros</h3>
             <p id="records-visible-count" class="muted">${state.records.length} de ${state.records.length} visibles</p>
           </div>
           <div class="hero-actions">
             <button class="ghost-btn" type="button" data-reset-filters="records">Limpiar filtros</button>
-            <button class="btn-secondary" type="button" data-export-records="true">Exportar CSV</button>
-            <button class="btn-danger" type="button" data-clear-records="true">Borrar historial</button>
+            <button class="btn-secondary" type="button" data-export-records="true" aria-label="Exportar registros a CSV">Exportar CSV</button>
+            <button class="btn-danger" type="button" data-clear-records="true" aria-label="Borrar todo el historial">Borrar historial</button>
           </div>
         </div>
         <div class="toolbar-filters">
-          <input id="records-search" placeholder="Buscar en resultados cargados" />
-          <select id="records-type-filter">
+          <div class="search-highlight" style="position:relative;">
+            <input id="records-search" placeholder="Buscar en resultados" aria-label="Buscar en resultados cargados" />
+          </div>
+          <select id="records-type-filter" aria-label="Filtrar por tipo">
             <option value="all">Todos los tipos</option>
-            <option value="prestamo">Préstamos</option>
+            <option value="prestamo">Prestamos</option>
             <option value="devolucion">Devoluciones</option>
           </select>
         </div>
         <div class="table-wrap">
-          <table id="records-table">
-            <thead><tr><th>Fecha</th><th>Tipo</th><th>Código</th><th>Nombre</th><th>Materia</th><th>Profesor</th><th>Grupo</th><th>Equipo</th><th>Obs.</th></tr></thead>
-            <tbody>${recordRows(state.records) || `<tr><td colspan="9">Sin registros.</td></tr>`}</tbody>
+          <table id="records-table" role="grid" aria-label="Tabla de registros">
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Codigo</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Materia</th>
+                <th scope="col">Profesor</th>
+                <th scope="col">Grupo</th>
+                <th scope="col">Equipo</th>
+                <th scope="col">Obs.</th>
+              </tr>
+            </thead>
+            <tbody>${recordRows(state.records)}</tbody>
           </table>
         </div>
       </article>
@@ -797,32 +901,38 @@ function recordsSection(state) {
 
 function reportsSection(state) {
   const studentOptions = state.students
-    .map((student) => `<option value="${student.id}">${student.codigo} · ${student.nombre}</option>`)
+    .map((student) => `<option value="${student.id}">${student.codigo} - ${student.nombre}</option>`)
     .join("");
 
   return `
     <div class="admin-grid wide">
-      <article class="panel">
-        <h3>Reportes</h3>
-        <form id="report-form" class="form-grid">
-          <label>
+      <article class="panel panel-reports">
+        <div class="panel-header-icon">
+          <div class="icon-circle">=</div>
+          <div>
+            <h3>Generar Reportes</h3>
+            <p>Selecciona el tipo de reporte y los filtros deseados</p>
+          </div>
+        </div>
+        <form id="report-form" class="form-grid" aria-label="Formulario para generar reportes">
+          <label for="report-type">
             Tipo de reporte
-            <select name="report_type">
-              <option value="prestamos_por_alumno">Préstamos por alumno</option>
-              <option value="prestamos_por_fecha">Préstamos por fecha</option>
-              <option value="equipos_mas_usados">Equipos más usados</option>
+            <select id="report-type" name="report_type">
+              <option value="prestamos_por_alumno">Prestamos por alumno</option>
+              <option value="prestamos_por_fecha">Prestamos por fecha</option>
+              <option value="equipos_mas_usados">Equipos mas usados</option>
             </select>
           </label>
-          <label>
+          <label for="report-alumno">
             Alumno
-            <select name="alumno_id">
+            <select id="report-alumno" name="alumno_id">
               <option value="">Todos</option>
               ${studentOptions}
             </select>
           </label>
           <div class="two-col">
-            <label>Fecha inicio<input type="date" name="fecha_inicio" /></label>
-            <label>Fecha fin<input type="date" name="fecha_fin" /></label>
+            <label for="report-fecha-inicio">Fecha inicio<input type="date" id="report-fecha-inicio" name="fecha_inicio" /></label>
+            <label for="report-fecha-fin">Fecha fin<input type="date" id="report-fecha-fin" name="fecha_fin" /></label>
           </div>
           <div class="two-col">
             <button class="btn" type="submit" data-report-action="preview">Vista previa</button>
@@ -831,15 +941,23 @@ function reportsSection(state) {
         </form>
         ${
           state.lastGeneratedPdfPath
-            ? `<div class="report-quick-actions"><button class="ghost-btn" type="button" data-open-last-pdf="true">Abrir último PDF generado</button></div>`
+            ? `<div class="report-quick-actions"><button class="ghost-btn" type="button" data-open-last-pdf="true" aria-label="Abrir ultimo PDF generado">Abrir ultimo PDF</button></div>`
             : ""
         }
       </article>
       <article class="panel">
-        <h3>${state.reportData?.titulo || "Vista previa"}</h3>
+        <div class="panel-header-icon">
+          <div class="icon-circle">=</div>
+          <div>
+            <h3>${state.reportData?.titulo || "Vista previa del reporte"}</h3>
+            <p>Resultados de la consulta</p>
+          </div>
+        </div>
         <div class="table-wrap">
-          <table>
-            <thead><tr><th>Concepto</th><th>Total</th><th>Detalle</th></tr></thead>
+          <table aria-label="Tabla de resultados del reporte">
+            <thead>
+              <tr><th scope="col">Concepto</th><th scope="col">Total</th><th scope="col">Detalle</th></tr>
+            </thead>
             <tbody>${reportRows(state.reportData)}</tbody>
           </table>
         </div>
@@ -865,7 +983,13 @@ function currentSection(state) {
     default:
       return `
         <div class="panel">
-          <h3>Dashboard admin</h3>
+          <div class="panel-header-icon">
+            <div class="icon-circle">📊</div>
+            <div>
+              <h3>Resumen del Dashboard</h3>
+              <p>Estadísticas generales del sistema</p>
+            </div>
+          </div>
           ${dashboardSummary(state.dashboard, state.admins.filter((admin) => admin.activo).length)}
         </div>
       `;
@@ -885,13 +1009,19 @@ export function renderAdminView(root, store) {
 
   if (!state.adminAuthenticated) {
     root.innerHTML = `
-      <section class="login-wrap">
-        <article class="panel login-card">
-          <h2>Login administrador</h2>
+      <section class="login-wrap" role="main">
+        <article class="panel login-card" style="border-left: none; border-top: 3px solid var(--accent);">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%; background: var(--primary-dark); display: grid; place-items: center;">
+              <span style="font-size: 1.75rem; color: white;">#</span>
+            </div>
+            <h2 style="margin: 0; color: var(--primary-dark);">Panel Administrador</h2>
+            <p class="muted" style="margin-top: 6px;">Ingresa tus credenciales para acceder</p>
+          </div>
           ${bannerMarkup(state.flash)}
-          <form id="admin-login-form" class="form-grid" autocomplete="off">
-            <label>Usuario<input name="usuario" autocomplete="off" /></label>
-            <label>Password<input type="password" name="password" autocomplete="new-password" /></label>
+          <form id="admin-login-form" class="form-grid" autocomplete="off" aria-label="Formulario de inicio de sesion">
+            <label for="login-usuario">Usuario<input id="login-usuario" name="usuario" autocomplete="off" required /></label>
+            <label for="login-password">Contrasena<input id="login-password" type="password" name="password" autocomplete="new-password" required /></label>
             <button class="btn btn-block" type="submit">INGRESAR</button>
           </form>
         </article>
@@ -910,24 +1040,48 @@ export function renderAdminView(root, store) {
     <section class="hero-card">
       <div>
         <h2>Dashboard administrador</h2>
-        <p class="muted">Gestión completa de alumnos, equipos, registros, importación y acceso de administradores.</p>
+        <p class="muted">Gestion completa de alumnos, equipos, registros, importacion y acceso de administradores.</p>
       </div>
       <div class="hero-actions stacked">
-        <div class="admin-chip">Sesión: ${state.currentAdmin?.nombre || state.currentAdmin?.usuario || "Administrador"}</div>
-        <button class="ghost-btn" type="button" data-action="logout-admin">Cerrar sesión</button>
+        <div class="admin-chip">Sesion: ${state.currentAdmin?.nombre || state.currentAdmin?.usuario || "Administrador"}</div>
+        <button class="ghost-btn" type="button" data-action="logout-admin" aria-label="Cerrar sesion">Cerrar sesion</button>
       </div>
     </section>
 
     ${bannerMarkup(state.flash)}
 
-    <section class="dashboard-grid dashboard-grid-admin">
-      ${sectionButton("IMPORTAR EXCEL", "import", state.adminSection === "import", "Especificaciones")}
-      ${sectionButton("ALUMNOS", "students", state.adminSection === "students", "Altas y edición")}
-      ${sectionButton("EQUIPOS", "equipment", state.adminSection === "equipment", "Inventario")}
-      ${sectionButton("ADMINS", "admins", state.adminSection === "admins", "Agregar y editar")}
-      ${sectionButton("REGISTROS", "records", state.adminSection === "records", "Historial")}
-      ${sectionButton("REPORTES", "reports", state.adminSection === "reports", "Vista y PDF")}
-    </section>
+    <nav class="dashboard-grid dashboard-grid-admin" aria-label="Secciones del administrador">
+      <button class="dashboard-tile ${state.adminSection === "import" ? "active" : ""}" data-section="import" type="button" aria-pressed="${state.adminSection === "import"}">
+        <span class="tile-icon">i</span>
+        <strong>IMPORTAR</strong>
+        <span>Especificaciones</span>
+      </button>
+      <button class="dashboard-tile ${state.adminSection === "students" ? "active" : ""}" data-section="students" type="button" aria-pressed="${state.adminSection === "students"}">
+        <span class="tile-icon">A</span>
+        <strong>ALUMNOS</strong>
+        <span>Altas y edicion</span>
+      </button>
+      <button class="dashboard-tile ${state.adminSection === "equipment" ? "active" : ""}" data-section="equipment" type="button" aria-pressed="${state.adminSection === "equipment"}">
+        <span class="tile-icon">E</span>
+        <strong>EQUIPOS</strong>
+        <span>Inventario</span>
+      </button>
+      <button class="dashboard-tile ${state.adminSection === "admins" ? "active" : ""}" data-section="admins" type="button" aria-pressed="${state.adminSection === "admins"}">
+        <span class="tile-icon">#</span>
+        <strong>ADMINS</strong>
+        <span>Agregar y editar</span>
+      </button>
+      <button class="dashboard-tile ${state.adminSection === "records" ? "active" : ""}" data-section="records" type="button" aria-pressed="${state.adminSection === "records"}">
+        <span class="tile-icon">R</span>
+        <strong>REGISTROS</strong>
+        <span>Historial</span>
+      </button>
+      <button class="dashboard-tile ${state.adminSection === "reports" ? "active" : ""}" data-section="reports" type="button" aria-pressed="${state.adminSection === "reports"}">
+        <span class="tile-icon">=</span>
+        <strong>REPORTES</strong>
+        <span>Vista y PDF</span>
+      </button>
+    </nav>
 
     ${currentSection(state)}
     ${reportPreviewModal(state)}

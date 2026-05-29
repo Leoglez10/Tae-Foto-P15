@@ -68,44 +68,45 @@ export function createAppShell(root, store) {
     const adminUiSnapshot = state.role === "admin" ? getAdminFocusSnapshot(root) : null;
 
     root.innerHTML = `
+      <a href="#main-content" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:9999;">Saltar al contenido principal</a>
       <div class="app-shell">
         <div class="ambient-orb orb-a"></div>
         <div class="ambient-orb orb-b"></div>
         <div class="ambient-grid"></div>
-        <header class="topbar">
+        <header class="topbar" role="banner">
           <div class="brand-lockup">
             <div class="logo-placeholder">
               <img src="./logo-p15.png" alt="Logo Preparatoria Quince" class="brand-logo" />
             </div>
             <div>
               <div class="brand-kicker">TAE Foto App</div>
-              <h1>Control de Préstamos</h1>
-              <p>Operación rápida para estudio, laboratorio y resguardo de equipo.</p>
+              <h1>Control de Prestamos</h1>
+              <p>Operacion rapida para estudio, laboratorio y resguardo de equipo.</p>
             </div>
           </div>
           ${
             state.role
-              ? `<button class="ghost-btn" type="button" data-action="go-home">Inicio</button>`
+              ? `<button class="ghost-btn" type="button" data-action="go-home" aria-label="Volver al inicio">Inicio</button>`
               : ""
           }
         </header>
-        <main class="content"></main>
+        <main class="content" id="main-content" tabindex="-1"></main>
       </div>
     `;
 
     const content = root.querySelector(".content");
     if (!state.role) {
       content.innerHTML = `
-        <section class="role-select">
+        <section class="role-select" role="main">
           <div class="welcome-card compact-home">
             <div class="welcome-kicker">Sistema de control</div>
             <h2>Seleccione modo de acceso</h2>
           </div>
           <div class="role-grid">
             <button class="role-card student-role" data-role="student" type="button">
-              <span class="role-eyebrow">Atención rápida</span>
+              <span class="role-eyebrow">Atencion rapida</span>
               <strong>ESTUDIANTE</strong>
-              <small>Captura código, registra préstamo o devolución y sigue con el siguiente.</small>
+              <small>Captura codigo, registra prestamo o devolucion y sigue con el siguiente.</small>
             </button>
             <button class="role-card admin-role" data-role="admin" type="button">
               <span class="role-eyebrow">Panel de control</span>
@@ -131,6 +132,12 @@ export function createAppShell(root, store) {
 
     root.querySelector("[data-action='go-home']")?.addEventListener("click", () => {
       store.actions.setRole(null);
+    });
+    
+    root.querySelector("#main-content")?.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && state.role) {
+        store.actions.setRole(null);
+      }
     });
   };
 
