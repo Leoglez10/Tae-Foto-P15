@@ -1,11 +1,12 @@
 use std::{
-    ffi::OsStr,
     fs,
+    io::{Cursor, Read, Seek},
     path::Path,
     process::Command,
     time::SystemTime,
 };
 
+use calamine::{open_workbook_auto_from_rs, Data, Range, Reader, Sheets};
 use chrono::{Datelike, Local};
 use rusqlite::{params, Connection, OptionalExtension};
 
@@ -14,13 +15,29 @@ use crate::{
     models::{
         AdminInput, AdminLoginPayload, AdminUser, BackupHistory, BackupItem, DashboardSummary,
         DatabaseImportPayload, EquipmentInput, EquipmentItem, ExcelImportPayload, ExcelImportSummary,
-        ExcelWorkbookImport, LoginResult, PdfResult, RecordFilter, RecordItem, ReportData, ReportRequest,
+        ExcelGroupRow, ExcelStudentRow, ExcelWorkbookImport, LoginResult, PdfResult, RecordFilter, RecordItem, ReportData, ReportRequest,
         ReportRow, StudentInput, StudentLookup,
     },
     services::{AppError, AppResult},
 };
 
-const EXCEL_READER_PS1: &str = include_str!("../../../scripts/read_excel_strict.ps1");
+// Header variants stored already normalized (uppercase, no accents).
+const STUDENT_HEADER_VARIANTS: &[&[&str]] = &[
+    &["CODIGO", "NOMBRE", "MATERIA", "PROFESOR(A)", "GRUPO"],
+    &["CODIGO", "NOMBRE", "MATERIA", "PROFESOR", "GRUPO"],
+];
+const GROUP_HEADER_VARIANTS: &[&[&str]] = &[&["GRUPO", "TURNO", "CICLO ESCOLAR"]];
+const LEGACY_REGISTRO_HEADERS: &[&str] = &[
+    "FECHA",
+    "CODIGO",
+    "NOMBRE",
+    "MATERIA",
+    "PROFESOR",
+    "GRUPO",
+    "TIPO DE REGISTRO",
+    "LAPTOP",
+    "OBSERVACIONES",
+];
 
 pub fn admin_login(db_path: &Path, payload: AdminLoginPayload) -> AppResult<LoginResult> {
     let conn = db::get_connection(db_path)?;
@@ -475,44 +492,171 @@ pub fn restore_database(db_path: &Path, app_data_dir: &Path, payload: DatabaseIm
     Ok(backup)
 }
 
-pub fn import_excel_data(db_path: &Path, app_data_dir: &Path, payload: ExcelImportPayload) -> AppResult<ExcelImportSummary> {
-    let temp_dir = app_data_dir.join("tmp");
-    fs::create_dir_all(&temp_dir)?;
-    let extension = Path::new(payload.file_name.as_str())
-        .extension()
-        .and_then(OsStr::to_str)
-        .unwrap_or("xlsx");
-    let workbook_path = temp_dir.join(format!("import-{}.{}", Local::now().timestamp_millis(), extension));
-    let script_path = temp_dir.join("read_excel_strict.ps1");
+fn normalize_header(value: &str) -> String {
+    value
+        .trim()
+        .to_uppercase()
+        .chars()
+        .map(|c| match c {
+            '\u{c1}' => 'A',
+            '\u{c9}' => 'E',
+            '\u{cd}' => 'I',
+            '\u{d3}' => 'O',
+            '\u{da}' | '\u{dc}' => 'U',
+            '\u{d1}' => 'N',
+            other => other,
+        })
+        .collect()
+}
 
-    fs::write(&workbook_path, payload.bytes)?;
-    fs::write(&script_path, EXCEL_READER_PS1)?;
+fn cell_text(cell: Option<&Data>) -> String {
+    match cell {
+        None | Some(Data::Empty) => String::new(),
+        Some(Data::String(value)) => value.trim().to_string(),
+        // Excel stores plain numbers as floats; keep integer codes free of ".0".
+        Some(Data::Float(value)) if value.fract() == 0.0 && value.abs() < 1e15 => {
+            format!("{}", *value as i64)
+        }
+        Some(other) => other.to_string().trim().to_string(),
+    }
+}
 
-    let output = Command::new("powershell")
-        .arg("-NoProfile")
-        .arg("-ExecutionPolicy")
-        .arg("Bypass")
-        .arg("-File")
-        .arg(&script_path)
-        .arg("-ExcelPath")
-        .arg(&workbook_path)
-        .output()?;
+fn sheet_range<RS: Read + Seek>(workbook: &mut Sheets<RS>, name: &str) -> Option<Range<Data>> {
+    let found = workbook
+        .sheet_names()
+        .iter()
+        .find(|sheet| sheet.trim().eq_ignore_ascii_case(name))?
+        .clone();
+    workbook.worksheet_range(&found).ok()
+}
 
-    let _ = fs::remove_file(&workbook_path);
-    let _ = fs::remove_file(&script_path);
+fn header_matches(range: &Range<Data>, expected: &[&str]) -> bool {
+    expected
+        .iter()
+        .enumerate()
+        .all(|(index, header)| normalize_header(&cell_text(range.get_value((0, index as u32)))) == *header)
+}
 
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
-        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        let message = if !stderr.is_empty() { stderr } else { stdout };
-        return Err(AppError::Validation(if message.is_empty() {
-            "El archivo Excel no tiene el formato correcto. Verifique los nombres de las columnas.".into()
-        } else {
-            message
-        }));
+fn header_matches_any(range: &Range<Data>, variants: &[&[&str]]) -> bool {
+    variants.iter().any(|variant| header_matches(range, variant))
+}
+
+fn assert_headers(range: &Range<Data>, variants: &[&[&str]], sheet_name: &str) -> AppResult<()> {
+    if header_matches_any(range, variants) {
+        return Ok(());
+    }
+    Err(AppError::Validation(format!(
+        "La hoja '{}' no tiene el formato correcto. Verifique los nombres y el orden de las columnas.",
+        sheet_name
+    )))
+}
+
+fn data_row_bounds(range: &Range<Data>) -> u32 {
+    range.end().map(|(row, _)| row).unwrap_or(0)
+}
+
+fn read_student_rows(range: &Range<Data>) -> Vec<ExcelStudentRow> {
+    let mut rows = Vec::new();
+    for row in 1..=data_row_bounds(range) {
+        let codigo = cell_text(range.get_value((row, 0)));
+        let nombre = cell_text(range.get_value((row, 1)));
+        let materia = cell_text(range.get_value((row, 2)));
+        let profesor = cell_text(range.get_value((row, 3)));
+        let grupo = cell_text(range.get_value((row, 4)));
+
+        if codigo.is_empty() && nombre.is_empty() && materia.is_empty() && profesor.is_empty() && grupo.is_empty() {
+            continue;
+        }
+
+        rows.push(ExcelStudentRow { codigo, nombre, materia, profesor, grupo });
+    }
+    rows
+}
+
+fn read_group_rows(range: &Range<Data>) -> Vec<ExcelGroupRow> {
+    let mut rows = Vec::new();
+    for row in 1..=data_row_bounds(range) {
+        let grupo = cell_text(range.get_value((row, 0)));
+        let turno = cell_text(range.get_value((row, 1)));
+        let ciclo_escolar = cell_text(range.get_value((row, 2)));
+
+        if grupo.is_empty() && turno.is_empty() && ciclo_escolar.is_empty() {
+            continue;
+        }
+
+        rows.push(ExcelGroupRow { grupo, turno, ciclo_escolar });
+    }
+    rows
+}
+
+fn parse_excel_workbook(bytes: Vec<u8>) -> AppResult<ExcelWorkbookImport> {
+    let mut workbook = open_workbook_auto_from_rs(Cursor::new(bytes)).map_err(|err| {
+        AppError::Validation(format!("No se pudo leer el archivo Excel: {}", err))
+    })?;
+
+    let alumnos_sheet = sheet_range(&mut workbook, "ALUMNOS");
+    let grupos_sheet = sheet_range(&mut workbook, "GRUPOS");
+    let registro_sheet = sheet_range(&mut workbook, "REGISTRO");
+
+    let has_legacy_student_sheet = grupos_sheet
+        .as_ref()
+        .map(|range| header_matches_any(range, STUDENT_HEADER_VARIANTS))
+        .unwrap_or(false);
+    let has_group_sheet = grupos_sheet
+        .as_ref()
+        .map(|range| header_matches_any(range, GROUP_HEADER_VARIANTS))
+        .unwrap_or(false);
+
+    if registro_sheet.is_some() && !has_legacy_student_sheet {
+        return Err(AppError::Validation(
+            "La hoja 'REGISTRO' solo se admite junto con una hoja 'GRUPOS' en formato legado.".into(),
+        ));
     }
 
-    let workbook: ExcelWorkbookImport = serde_json::from_slice(&output.stdout)?;
+    let mut validated_sheets = Vec::new();
+    let mut students = Vec::new();
+    let mut groups = Vec::new();
+    let mut format = String::new();
+
+    if let Some(range) = alumnos_sheet.as_ref() {
+        assert_headers(range, STUDENT_HEADER_VARIANTS, "ALUMNOS")?;
+        students = read_student_rows(range);
+        validated_sheets.push("ALUMNOS".to_string());
+        format = "separado".to_string();
+    } else if let Some(range) = grupos_sheet.as_ref().filter(|_| has_legacy_student_sheet) {
+        students = read_student_rows(range);
+        validated_sheets.push("GRUPOS".to_string());
+        format = "legado".to_string();
+    }
+
+    if let Some(range) = grupos_sheet.as_ref().filter(|_| has_group_sheet) {
+        groups = read_group_rows(range);
+        validated_sheets.push("GRUPOS".to_string());
+        if format.is_empty() {
+            format = "separado".to_string();
+        }
+    }
+
+    if let Some(range) = registro_sheet.as_ref() {
+        assert_headers(range, &[LEGACY_REGISTRO_HEADERS], "REGISTRO")?;
+        validated_sheets.push("REGISTRO".to_string());
+    }
+
+    if validated_sheets.is_empty() {
+        return Err(AppError::Validation(
+            "El archivo debe contener una hoja 'ALUMNOS', una hoja 'GRUPOS' compatible o el formato legado 'GRUPOS' + 'REGISTRO'.".into(),
+        ));
+    }
+
+    Ok(ExcelWorkbookImport { validated_sheets, format, students, groups })
+}
+
+pub fn import_excel_data(
+    db_path: &Path,
+    _app_data_dir: &Path,
+    payload: ExcelImportPayload,
+) -> AppResult<ExcelImportSummary> {
+    let workbook = parse_excel_workbook(payload.bytes)?;
     let mut conn = db::get_connection(db_path)?;
     let tx = conn.transaction()?;
     let mut student_inserted = 0_i64;
@@ -1039,4 +1183,42 @@ fn escape_html(value: &str) -> String {
         .replace('>', "&gt;")
         .replace('"', "&quot;")
         .replace('\'', "&#39;")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn student_sheet() -> Range<Data> {
+        let mut range = Range::new((0, 0), (2, 4));
+        for (col, header) in ["Código", "Nombre", "Materia", "Profesor(a)", "Grupo"]
+            .iter()
+            .enumerate()
+        {
+            range.set_value((0, col as u32), Data::String((*header).to_string()));
+        }
+        range.set_value((1, 0), Data::Float(12345.0));
+        range.set_value((1, 1), Data::String("  Ana Perez  ".to_string()));
+        range.set_value((1, 4), Data::String("1A".to_string()));
+        range
+    }
+
+    #[test]
+    fn accepts_accented_headers_and_numeric_codes() {
+        let range = student_sheet();
+        assert!(header_matches_any(&range, STUDENT_HEADER_VARIANTS));
+
+        let rows = read_student_rows(&range);
+        assert_eq!(rows.len(), 1, "empty trailing row must be skipped");
+        assert_eq!(rows[0].codigo, "12345");
+        assert_eq!(rows[0].nombre, "Ana Perez");
+        assert_eq!(rows[0].grupo, "1A");
+    }
+
+    #[test]
+    fn rejects_wrong_headers() {
+        let mut range = Range::new((0, 0), (0, 4));
+        range.set_value((0, 0), Data::String("Matricula".to_string()));
+        assert!(!header_matches_any(&range, STUDENT_HEADER_VARIANTS));
+    }
 }
