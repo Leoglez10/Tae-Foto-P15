@@ -1,3 +1,4 @@
+import { icon } from "../icons.js";
 let toastTimeout = null;
 function showToast(message, type = "success") {
   const existing = document.querySelector(".op-toast");
@@ -9,7 +10,7 @@ function showToast(message, type = "success") {
   toast.setAttribute("role", "status");
   toast.setAttribute("aria-live", "polite");
   toast.innerHTML = `
-    <span class="op-toast-icon">${type === "success" ? "OK" : "!"}</span>
+    <span class="op-toast-icon">${icon(type === "success" ? "check" : "alert")}</span>
     <span class="op-toast-msg">${message}</span>
   `;
   document.body.appendChild(toast);
@@ -27,27 +28,11 @@ function bannerMarkup(flash) {
   return `<div class="status-banner ${flash.tone}" role="alert" aria-live="polite">${flash.message}</div>`;
 }
 
-function operationTypeButtons(currentType, student) {
-  const hasActiveLoan = Boolean(student?.prestamo_activo);
-  return `
-    <div class="mode-toggle" role="tablist" aria-label="Tipo de movimiento">
-      <button class="mode-pill ${currentType === "prestamo" ? "active" : ""}" type="button" data-operation-type="prestamo" role="tab" aria-selected="${currentType === "prestamo"}" aria-controls="operation-panel">
-        <span>Prestamo</span>
-        <small>${hasActiveLoan ? "Ya tiene uno activo" : "Registrar salida"}</small>
-      </button>
-      <button class="mode-pill ${currentType === "devolucion" ? "active" : ""}" type="button" data-operation-type="devolucion" role="tab" aria-selected="${currentType === "devolucion"}" aria-controls="operation-panel">
-        <span>Devolucion</span>
-        <small>${hasActiveLoan ? "Registrar regreso" : "Sin equipo por devolver"}</small>
-      </button>
-    </div>
-  `;
-}
-
 function studentCard(student) {
   if (!student) {
     return `
       <div class="student-hero empty">
-        <div class="student-avatar empty">?</div>
+        <div class="student-avatar empty">${icon("user")}</div>
         <div class="student-name-display">
           <h3 class="student-name-empty">Sin alumno seleccionado</h3>
           <p class="muted">Capture el codigo y presione Enter</p>
@@ -61,7 +46,7 @@ function studentCard(student) {
   return `
     <div class="student-hero ${hasLoan ? "has-loan" : ""}">
       <div class="student-avatar ${hasLoan ? "warning" : "success"}">
-        ${hasLoan ? "!" : "OK"}
+        ${icon(hasLoan ? "alert" : "check")}
       </div>
       <div class="student-name-display">
         <h3 class="student-name">${student.nombre}</h3>
@@ -85,19 +70,9 @@ function studentCard(student) {
   `;
 }
 
-function equipmentOptions(equipment) {
-  if (!equipment.length) {
-    return `<option value="">No hay equipos disponibles</option>`;
-  }
-
-  return equipment
-    .map((item) => `<option value="${item.id}">${item.numero} · ${item.descripcion}</option>`)
-    .join("");
-}
-
 function historyTable(history) {
   if (!history.length) {
-    return `<div class="empty-state"><div class="empty-state-icon">-</div><p>Sin historial para este alumno</p></div>`;
+    return `<div class="empty-state"><div class="empty-state-icon">${icon("empty")}</div><p>Sin historial para este alumno</p></div>`;
   }
   const rows = history
     .map(
@@ -127,7 +102,6 @@ function historyTable(history) {
 export function renderOperationView(root, store) {
   const state = store.getState();
   const dashboard = state.dashboard || { alumnos_activos: 0, equipos_disponibles: 0, prestamos_activos: 0 };
-  const currentType = state.operationType || "prestamo";
   const sortByNumero = (arr) =>
     [...arr].sort((a, b) => {
       const aNum = parseFloat(a.numero) || 0;
@@ -143,71 +117,64 @@ export function renderOperationView(root, store) {
   );
 
   const hasLoan = state.selectedStudent?.prestamo_activo;
-  const submitLabel = hasLoan ? "📥 Registrar devolución" : "📤 Registrar préstamo";
+  const submitLabel = hasLoan ? `${icon("in")} Registrar devolución` : `${icon("out")} Registrar préstamo`;
   const submitClass = hasLoan ? "btn-danger" : "btn";
-  const equipmentDisabled = currentType === "devolucion" || !state.selectedStudent || availableEquipment.length === 0;
-  const selectPlaceholder = currentType === "devolucion" ? "📥 Devolución automática" : "📦 Seleccione equipo";
 
   root.innerHTML = `
-    <section class="hero-card" aria-label="Resumen del dashboard">
-      <div>
-        <h2>Prestamo de Equipos</h2>
-        <p class="muted">Capture el codigo del alumno y presione Enter</p>
-      </div>
-      <div class="hero-stats" aria-label="Estadisticas">
-        <article class="stat stat-alumnos">Alumnos<strong>${dashboard.alumnos_activos}</strong></article>
-        <article class="stat stat-disponibles">Disponibles<strong>${dashboard.equipos_disponibles}</strong></article>
-        <article class="stat stat-prestados">Prestados<strong>${dashboard.prestamos_activos}</strong></article>
-      </div>
-    </section>
+    <div class="op-stats" aria-label="Estadisticas">
+      <span class="op-stat"><b>${dashboard.alumnos_activos}</b> Alumnos</span>
+      <span class="op-stat ok"><b>${dashboard.equipos_disponibles}</b> Disponibles</span>
+      <span class="op-stat warn"><b>${dashboard.prestamos_activos}</b> Prestados</span>
+    </div>
 
     ${bannerMarkup(state.flash)}
 
     <section class="operation-layout" id="operation-panel" role="tabpanel" aria-label="Operacion de prestamo">
       <div class="left-column">
         <article class="panel panel-code">
-          <div class="code-input-wrapper">
-            <label for="student-code" class="big-label">Codigo del Alumno</label>
-            <input 
-              id="student-code" 
-              name="codigo" 
-              autocomplete="off" 
-              class="big-input"
-              placeholder="Escanear o escribir codigo..."
-              value="${state.selectedStudent?.codigo || ""}"
-              aria-describedby="code-hint"
-            />
-            <span id="code-hint" class="kbd-hint">Presione <kbd>Enter</kbd> para buscar</span>
-          </div>
+          <label for="student-code" class="step-title"><span class="step-num">1</span> Escanea tu codigo</label>
+          <input
+            id="student-code"
+            name="codigo"
+            autocomplete="off"
+            class="big-input"
+            placeholder="Escanear o escribir codigo..."
+            value="${state.selectedStudent?.codigo || ""}"
+            aria-describedby="code-hint"
+          />
+          <span id="code-hint" class="kbd-hint">Presione <kbd>Enter</kbd> para buscar &middot; <kbd>Esc</kbd> para limpiar</span>
         </article>
 
         ${!hasLoan ? `
         <article class="panel panel-equipment" aria-label="Seleccionar equipo">
-          <h3>Seleccionar Equipo</h3>
+          <h3 class="step-title">
+            <span class="step-num">2</span> Elige el equipo
+            ${availableEquipment.length > 12 ? `
+              <input id="equipment-filter" class="eq-filter" type="search" autocomplete="off" placeholder="Buscar numero..." aria-label="Buscar equipo por numero o descripcion" />
+            ` : ""}
+          </h3>
           <div class="equipment-grid" role="listbox" aria-label="Equipos disponibles">
-            ${availableEquipment.length === 0 
+            ${availableEquipment.length === 0
               ? `<div class="no-equipment">No hay equipos disponibles</div>`
               : availableEquipment.map(item => `
-                <button type="button" class="equipment-btn" data-equipment-id="${item.id}" role="option" aria-selected="false">
+                <button type="button" class="equipment-btn" data-equipment-id="${item.id}" data-search="${`${item.numero} ${item.descripcion || ""}`.toLowerCase()}" role="option" aria-selected="false">
                   <span class="eq-num">${item.numero}</span>
                   <span class="eq-desc">${item.descripcion || ""}</span>
                 </button>
               `).join("")
             }
+            <div class="no-equipment" id="equipment-no-match" hidden>Ningun equipo coincide</div>
           </div>
           <input type="hidden" name="equipo_id" id="selected-equipment-id" value="" />
         </article>
         ` : ""}
 
-        <article class="panel" aria-label="Observaciones">
-          <h3>Observaciones</h3>
-          <input name="observaciones" id="observaciones" class="obs-input" placeholder="${hasLoan ? "Notas opcionales (devolucion)..." : "Notas opcionales..."}" aria-label="Observaciones adicionales" />
-        </article>
-
-        <button class="btn btn-block btn-xl ${submitClass}" id="submit-btn" type="button" aria-label="${hasLoan ? "Registrar devolucion" : "Registrar prestamo"}">
-          ${submitLabel}
-        </button>
-        <p class="kbd-hint" style="text-align: center; margin-top: 8px;">Presione <kbd>Esc</kbd> para limpiar</p>
+        <div class="op-actions">
+          <input name="observaciones" id="observaciones" class="obs-input" placeholder="${hasLoan ? "Observaciones de la devolucion (opcional)" : "Observaciones (opcional)"}" aria-label="Observaciones adicionales" />
+          <button class="btn btn-block btn-xl ${submitClass}" id="submit-btn" type="button" aria-label="${hasLoan ? "Registrar devolucion" : "Registrar prestamo"}">
+            <span class="step-num">${hasLoan ? "2" : "3"}</span> ${submitLabel}
+          </button>
+        </div>
       </div>
 
       <div class="right-column">
@@ -251,6 +218,32 @@ export function renderOperationView(root, store) {
     });
   });
 
+  const filterInput = root.querySelector("#equipment-filter");
+  filterInput?.addEventListener("input", () => {
+    const query = filterInput.value.trim().toLowerCase();
+    let visible = 0;
+    root.querySelectorAll(".equipment-btn").forEach((btn) => {
+      const match = !query || btn.dataset.search.includes(query);
+      btn.hidden = !match;
+      if (match) visible += 1;
+    });
+    root.querySelector("#equipment-no-match").hidden = visible > 0;
+  });
+
+  const resetForm = () => {
+    if (equipmentInput) equipmentInput.value = "";
+    root.querySelectorAll(".equipment-btn").forEach((btn) => {
+      btn.classList.remove("selected");
+      btn.hidden = false;
+    });
+    if (filterInput) filterInput.value = "";
+    const noMatch = root.querySelector("#equipment-no-match");
+    if (noMatch) noMatch.hidden = true;
+    root.querySelector("#observaciones").value = "";
+    codeInput.value = "";
+    codeInput.focus();
+  };
+
   const obsInput = root.querySelector("#observaciones");
   obsInput.addEventListener("keydown", async (event) => {
     if (event.key === "Enter") {
@@ -292,20 +285,12 @@ export function renderOperationView(root, store) {
       showToast("Prestamo registrado", "success");
     }
 
-    if (equipmentInput) equipmentInput.value = "";
-    root.querySelectorAll(".equipment-btn").forEach(b => b.classList.remove("selected"));
-    root.querySelector("#observaciones").value = "";
-    codeInput.value = "";
-    codeInput.focus();
+    resetForm();
   });
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      if (equipmentInput) equipmentInput.value = "";
-      root.querySelectorAll(".equipment-btn").forEach(b => b.classList.remove("selected"));
-      root.querySelector("#observaciones").value = "";
-      codeInput.value = "";
-      codeInput.focus();
+      resetForm();
     }
   });
 

@@ -15,3 +15,6 @@ prestamos.sqlite
 # Env
 .env
 .env.local
+
+# Local tooling cache
+.atl/

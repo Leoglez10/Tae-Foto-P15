@@ -69,7 +69,7 @@ export function createAppShell(root, store) {
 
     root.innerHTML = `
       <a href="#main-content" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:9999;">Saltar al contenido principal</a>
-      <div class="app-shell">
+      <div class="app-shell ${state.role === "student" ? "fit" : ""}">
         <div class="ambient-orb orb-a"></div>
         <div class="ambient-orb orb-b"></div>
         <div class="ambient-grid"></div>
