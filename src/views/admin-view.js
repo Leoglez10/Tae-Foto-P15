@@ -641,15 +641,16 @@ function importSection(state) {
 
 function studentsSection(state) {
   return `
-    <div class="admin-grid wide">
-      <article class="panel">
-        <div class="panel-header-icon">
-          <div class="icon-circle">+</div>
-          <div>
-            <h3>Agregar alumno</h3>
-            <p>Registra un nuevo alumno en el sistema</p>
-          </div>
+    <article class="panel">
+      <div class="section-head">
+        <div>
+          <h3>Alumnos</h3>
+          <p id="students-visible-count" class="muted">${state.students.length} de ${state.students.length} visibles</p>
         </div>
+        <button class="ghost-btn" type="button" data-reset-filters="students">Limpiar filtros</button>
+      </div>
+      <details class="inline-form" id="student-create-panel">
+        <summary>${icon("plus")} Agregar alumno</summary>
         <form id="student-create-form" class="form-grid" aria-label="Formulario para agregar alumno">
           <label for="new-student-codigo">Codigo<input id="new-student-codigo" name="codigo" required /></label>
           <label for="new-student-nombre">Nombre<input id="new-student-nombre" name="nombre" required /></label>
@@ -658,57 +659,49 @@ function studentsSection(state) {
           <label for="new-student-grupo">Grupo<input id="new-student-grupo" name="grupo" required /></label>
           <button class="btn" type="submit">Agregar alumno</button>
         </form>
-      </article>
-      <article class="panel">
-        <div class="section-head">
-          <div>
-            <h3>Alumnos</h3>
-            <p id="students-visible-count" class="muted">${state.students.length} de ${state.students.length} visibles</p>
-          </div>
-          <button class="ghost-btn" type="button" data-reset-filters="students">Limpiar filtros</button>
+      </details>
+      <div class="toolbar-filters">
+        <div class="search-highlight" style="position:relative;">
+          <input id="student-search" placeholder="Buscar alumno" aria-label="Buscar alumno por codigo, nombre, materia" />
         </div>
-        <div class="toolbar-filters">
-          <div class="search-highlight" style="position:relative;">
-            <input id="student-search" placeholder="Buscar alumno" aria-label="Buscar alumno por codigo, nombre, materia" />
-          </div>
-          <select id="student-status-filter" aria-label="Filtrar por estado">
-            <option value="all">Todos</option>
-            <option value="active">Activos</option>
-            <option value="inactive">Inactivos</option>
-          </select>
-        </div>
-        <div class="table-wrap">
-          <table id="students-table" role="grid" aria-label="Tabla de alumnos">
-            <thead>
-              <tr>
-                <th scope="col">Codigo</th>
-                <th scope="col">Nombre</th>
-                <th scope="col">Materia</th>
-                <th scope="col">Profesor</th>
-                <th scope="col">Grupo</th>
-                <th scope="col">Estado</th>
-                <th scope="col">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>${studentRows(state.students)}</tbody>
-          </table>
-        </div>
-      </article>
-    </div>
+        <select id="student-status-filter" aria-label="Filtrar por estado">
+          <option value="all">Todos</option>
+          <option value="active">Activos</option>
+          <option value="inactive">Inactivos</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table id="students-table" role="grid" aria-label="Tabla de alumnos">
+          <thead>
+            <tr>
+              <th scope="col">Codigo</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Materia</th>
+              <th scope="col">Profesor</th>
+              <th scope="col">Grupo</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>${studentRows(state.students)}</tbody>
+        </table>
+      </div>
+    </article>
   `;
 }
 
 function equipmentSection(state) {
   return `
-    <div class="admin-grid wide">
-      <article class="panel">
-        <div class="panel-header-icon">
-          <div class="icon-circle">+</div>
-          <div>
-            <h3>Agregar equipo</h3>
-            <p>Registra un nuevo equipo en el inventario</p>
-          </div>
+    <article class="panel">
+      <div class="section-head">
+        <div>
+          <h3>Equipos</h3>
+          <p id="equipment-visible-count" class="muted">${state.equipment.length} de ${state.equipment.length} visibles</p>
         </div>
+        <button class="ghost-btn" type="button" data-reset-filters="equipment">Limpiar filtros</button>
+      </div>
+      <details class="inline-form" id="equipment-create-panel">
+        <summary>${icon("plus")} Agregar equipo</summary>
         <form id="equipment-create-form" class="form-grid" aria-label="Formulario para agregar equipo">
           <label for="new-equipment-numero">Numero<input id="new-equipment-numero" name="numero" required /></label>
           <label for="new-equipment-tipo">Tipo<input id="new-equipment-tipo" name="tipo" placeholder="Ej: Camara, Lente" required /></label>
@@ -722,167 +715,140 @@ function equipmentSection(state) {
           </label>
           <button class="btn" type="submit">Agregar equipo</button>
         </form>
-      </article>
-      <article class="panel">
-        <div class="section-head">
-          <div>
-            <h3>Equipos</h3>
-            <p id="equipment-visible-count" class="muted">${state.equipment.length} de ${state.equipment.length} visibles</p>
-          </div>
-          <button class="ghost-btn" type="button" data-reset-filters="equipment">Limpiar filtros</button>
+      </details>
+      <div class="toolbar-filters three-up">
+        <div class="search-highlight" style="position:relative;">
+          <input id="equipment-search" placeholder="Buscar equipo" aria-label="Buscar equipo por numero, tipo, descripcion" />
         </div>
-        <div class="toolbar-filters three-up">
-          <div class="search-highlight" style="position:relative;">
-            <input id="equipment-search" placeholder="Buscar equipo" aria-label="Buscar equipo por numero, tipo, descripcion" />
-          </div>
-          <select id="equipment-status-filter" aria-label="Filtrar por estado del equipo">
-            <option value="all">Todos los estados</option>
-            <option value="disponible">Disponibles</option>
-            <option value="prestado">Prestados</option>
-          </select>
-          <select id="equipment-active-filter" aria-label="Filtrar por estado activo">
-            <option value="all">Activos e inactivos</option>
-            <option value="active">Solo activos</option>
-            <option value="inactive">Solo inactivos</option>
-          </select>
-        </div>
-        <div class="table-wrap">
-          <table id="equipment-table" role="grid" aria-label="Tabla de equipos">
-            <thead>
-              <tr>
-                <th scope="col" data-sort-col="numero" class="sortable-th">Numero <span class="sort-arrow">${icon("sort")}</span></th>
-                <th scope="col" data-sort-col="tipo" class="sortable-th">Tipo <span class="sort-arrow">${icon("sort")}</span></th>
-                <th scope="col" data-sort-col="descripcion" class="sortable-th">Descripcion <span class="sort-arrow">${icon("sort")}</span></th>
-                <th scope="col" data-sort-col="estado" class="sortable-th">Estado <span class="sort-arrow">${icon("sort")}</span></th>
-                <th scope="col" data-sort-col="activo" class="sortable-th">Activo <span class="sort-arrow">${icon("sort")}</span></th>
-                <th scope="col">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>${equipmentRows(state.equipment)}</tbody>
-          </table>
-        </div>
-      </article>
-    </div>
+        <select id="equipment-status-filter" aria-label="Filtrar por estado del equipo">
+          <option value="all">Todos los estados</option>
+          <option value="disponible">Disponibles</option>
+          <option value="prestado">Prestados</option>
+        </select>
+        <select id="equipment-active-filter" aria-label="Filtrar por estado activo">
+          <option value="all">Activos e inactivos</option>
+          <option value="active">Solo activos</option>
+          <option value="inactive">Solo inactivos</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table id="equipment-table" role="grid" aria-label="Tabla de equipos">
+          <thead>
+            <tr>
+              <th scope="col" data-sort-col="numero" class="sortable-th">Numero <span class="sort-arrow">${icon("sort")}</span></th>
+              <th scope="col" data-sort-col="tipo" class="sortable-th">Tipo <span class="sort-arrow">${icon("sort")}</span></th>
+              <th scope="col" data-sort-col="descripcion" class="sortable-th">Descripcion <span class="sort-arrow">${icon("sort")}</span></th>
+              <th scope="col" data-sort-col="estado" class="sortable-th">Estado <span class="sort-arrow">${icon("sort")}</span></th>
+              <th scope="col" data-sort-col="activo" class="sortable-th">Activo <span class="sort-arrow">${icon("sort")}</span></th>
+              <th scope="col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>${equipmentRows(state.equipment)}</tbody>
+        </table>
+      </div>
+    </article>
   `;
 }
 
 function adminsSection(state) {
   return `
-    <div class="admin-grid wide">
-      <article class="panel">
-        <div class="panel-header-icon">
-          <div class="icon-circle">+</div>
-          <div>
-            <h3>Agregar administrador</h3>
-            <p>Registra un nuevo administrador en el sistema</p>
-          </div>
+    <article class="panel">
+      <div class="section-head">
+        <div>
+          <h3>Administradores</h3>
+          <p id="admins-visible-count" class="muted">${state.admins.length} de ${state.admins.length} visibles</p>
         </div>
+        <button class="ghost-btn" type="button" data-reset-filters="admins">Limpiar filtros</button>
+      </div>
+      <details class="inline-form" id="admin-create-panel">
+        <summary>${icon("plus")} Agregar administrador</summary>
         <form id="admin-create-form" class="form-grid" aria-label="Formulario para agregar administrador">
           <label for="new-admin-usuario">Usuario<input id="new-admin-usuario" name="usuario" required /></label>
           <label for="new-admin-nombre">Nombre<input id="new-admin-nombre" name="nombre" required /></label>
           <label for="new-admin-password">Contrasena<input id="new-admin-password" name="password" type="password" required /></label>
           <button class="btn" type="submit">Agregar administrador</button>
         </form>
-      </article>
-      <article class="panel">
-        <div class="section-head">
-          <div>
-            <h3>Administradores</h3>
-            <p id="admins-visible-count" class="muted">${state.admins.length} de ${state.admins.length} visibles</p>
-          </div>
-          <button class="ghost-btn" type="button" data-reset-filters="admins">Limpiar filtros</button>
+      </details>
+      <div class="toolbar-filters">
+        <div class="search-highlight" style="position:relative;">
+          <input id="admin-search" placeholder="Buscar administrador" aria-label="Buscar administrador por usuario o nombre" />
         </div>
-        <div class="toolbar-filters">
-          <div class="search-highlight" style="position:relative;">
-            <input id="admin-search" placeholder="Buscar administrador" aria-label="Buscar administrador por usuario o nombre" />
-          </div>
-          <select id="admin-status-filter" aria-label="Filtrar por estado">
-            <option value="all">Todos</option>
-            <option value="active">Activos</option>
-            <option value="inactive">Inactivos</option>
-          </select>
-        </div>
-        <div class="table-wrap">
-          <table id="admins-table" role="grid" aria-label="Tabla de administradores">
-            <thead>
-              <tr>
-                <th scope="col">Usuario</th>
-                <th scope="col">Nombre</th>
-                <th scope="col">Nueva contrasena</th>
-                <th scope="col">Estado</th>
-                <th scope="col">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>${adminRows(state.admins)}</tbody>
-          </table>
-        </div>
-      </article>
-    </div>
+        <select id="admin-status-filter" aria-label="Filtrar por estado">
+          <option value="all">Todos</option>
+          <option value="active">Activos</option>
+          <option value="inactive">Inactivos</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table id="admins-table" role="grid" aria-label="Tabla de administradores">
+          <thead>
+            <tr>
+              <th scope="col">Usuario</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Nueva contrasena</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>${adminRows(state.admins)}</tbody>
+        </table>
+      </div>
+    </article>
   `;
 }
 
 function recordsSection(state) {
   return `
-    <div class="admin-grid wide">
-      <article class="panel panel-records">
-        <div class="panel-header-icon">
-          <div class="icon-circle">?</div>
-          <div>
-            <h3>Filtros de registros</h3>
-            <p>Busca registros por alumno o rango de fechas</p>
-          </div>
+    <article class="panel">
+      <div class="section-head">
+        <div>
+          <h3>Historial de Registros</h3>
+          <p id="records-visible-count" class="muted">${state.records.length} de ${state.records.length} visibles</p>
         </div>
+        <div class="hero-actions">
+          <button class="ghost-btn" type="button" data-reset-filters="records">Limpiar filtros</button>
+          <button class="btn-secondary" type="button" data-export-records="true" aria-label="Exportar registros a CSV">Exportar CSV</button>
+          <button class="btn-danger" type="button" data-clear-records="true" aria-label="Borrar todo el historial">Borrar historial</button>
+        </div>
+      </div>
+      <details class="inline-form" id="records-filter-panel">
+        <summary>${icon("search")} Buscar por alumno o rango de fechas</summary>
         <form id="records-filter-form" class="form-grid" aria-label="Formulario para filtrar registros">
           <label for="records-alumno">Alumno<input id="records-alumno" name="alumno_query" value="${state.recordFilters.alumno_query || ""}" placeholder="Codigo o nombre del alumno" /></label>
-          <div class="two-col">
-            <label for="records-fecha-inicio">Fecha inicio<input type="date" id="records-fecha-inicio" name="fecha_inicio" value="${state.recordFilters.fecha_inicio || ""}" /></label>
-            <label for="records-fecha-fin">Fecha fin<input type="date" id="records-fecha-fin" name="fecha_fin" value="${state.recordFilters.fecha_fin || ""}" /></label>
-          </div>
+          <label for="records-fecha-inicio">Fecha inicio<input type="date" id="records-fecha-inicio" name="fecha_inicio" value="${state.recordFilters.fecha_inicio || ""}" /></label>
+          <label for="records-fecha-fin">Fecha fin<input type="date" id="records-fecha-fin" name="fecha_fin" value="${state.recordFilters.fecha_fin || ""}" /></label>
           <button class="btn" type="submit">Filtrar</button>
         </form>
-      </article>
-      <article class="panel">
-        <div class="section-head">
-          <div>
-            <h3>Historial de Registros</h3>
-            <p id="records-visible-count" class="muted">${state.records.length} de ${state.records.length} visibles</p>
-          </div>
-          <div class="hero-actions">
-            <button class="ghost-btn" type="button" data-reset-filters="records">Limpiar filtros</button>
-            <button class="btn-secondary" type="button" data-export-records="true" aria-label="Exportar registros a CSV">Exportar CSV</button>
-            <button class="btn-danger" type="button" data-clear-records="true" aria-label="Borrar todo el historial">Borrar historial</button>
-          </div>
+      </details>
+      <div class="toolbar-filters">
+        <div class="search-highlight" style="position:relative;">
+          <input id="records-search" placeholder="Buscar en resultados" aria-label="Buscar en resultados cargados" />
         </div>
-        <div class="toolbar-filters">
-          <div class="search-highlight" style="position:relative;">
-            <input id="records-search" placeholder="Buscar en resultados" aria-label="Buscar en resultados cargados" />
-          </div>
-          <select id="records-type-filter" aria-label="Filtrar por tipo">
-            <option value="all">Todos los tipos</option>
-            <option value="prestamo">Prestamos</option>
-            <option value="devolucion">Devoluciones</option>
-          </select>
-        </div>
-        <div class="table-wrap">
-          <table id="records-table" role="grid" aria-label="Tabla de registros">
-            <thead>
-              <tr>
-                <th scope="col">Fecha</th>
-                <th scope="col">Tipo</th>
-                <th scope="col">Codigo</th>
-                <th scope="col">Nombre</th>
-                <th scope="col">Materia</th>
-                <th scope="col">Profesor</th>
-                <th scope="col">Grupo</th>
-                <th scope="col">Equipo</th>
-                <th scope="col">Obs.</th>
-              </tr>
-            </thead>
-            <tbody>${recordRows(state.records)}</tbody>
-          </table>
-        </div>
-      </article>
-    </div>
+        <select id="records-type-filter" aria-label="Filtrar por tipo">
+          <option value="all">Todos los tipos</option>
+          <option value="prestamo">Prestamos</option>
+          <option value="devolucion">Devoluciones</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table id="records-table" role="grid" aria-label="Tabla de registros">
+          <thead>
+            <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Codigo</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Materia</th>
+              <th scope="col">Profesor</th>
+              <th scope="col">Grupo</th>
+              <th scope="col">Equipo</th>
+              <th scope="col">Obs.</th>
+            </tr>
+          </thead>
+          <tbody>${recordRows(state.records)}</tbody>
+        </table>
+      </div>
+    </article>
   `;
 }
 
@@ -892,64 +858,62 @@ function reportsSection(state) {
     .join("");
 
   return `
-    <div class="admin-grid wide">
-      <article class="panel panel-reports">
-        <div class="panel-header-icon">
-          <div class="icon-circle">=</div>
-          <div>
-            <h3>Generar Reportes</h3>
-            <p>Selecciona el tipo de reporte y los filtros deseados</p>
-          </div>
+    <article class="panel panel-reports">
+      <div class="panel-header-icon">
+        <div class="icon-circle">${icon("chart")}</div>
+        <div>
+          <h3>Generar Reportes</h3>
+          <p>Selecciona el tipo de reporte y los filtros deseados</p>
         </div>
-        <form id="report-form" class="form-grid" aria-label="Formulario para generar reportes">
-          <label for="report-type">
-            Tipo de reporte
-            <select id="report-type" name="report_type">
-              <option value="prestamos_por_alumno">Prestamos por alumno</option>
-              <option value="prestamos_por_fecha">Prestamos por fecha</option>
-              <option value="equipos_mas_usados">Equipos mas usados</option>
-            </select>
-          </label>
-          <label for="report-alumno">
-            Alumno
-            <select id="report-alumno" name="alumno_id">
-              <option value="">Todos</option>
-              ${studentOptions}
-            </select>
-          </label>
-          <div class="two-col">
-            <label for="report-fecha-inicio">Fecha inicio<input type="date" id="report-fecha-inicio" name="fecha_inicio" /></label>
-            <label for="report-fecha-fin">Fecha fin<input type="date" id="report-fecha-fin" name="fecha_fin" /></label>
-          </div>
-          <div class="two-col">
-            <button class="btn" type="submit" data-report-action="preview">Vista previa</button>
-            <button class="btn-secondary" type="submit" data-report-action="table">Solo consultar</button>
-          </div>
-        </form>
-        ${
-          state.lastGeneratedPdfPath
-            ? `<div class="report-quick-actions"><button class="ghost-btn" type="button" data-open-last-pdf="true" aria-label="Abrir ultimo PDF generado">Abrir ultimo PDF</button></div>`
-            : ""
-        }
-      </article>
-      <article class="panel">
-        <div class="panel-header-icon">
-          <div class="icon-circle">=</div>
-          <div>
-            <h3>${state.reportData?.titulo || "Vista previa del reporte"}</h3>
-            <p>Resultados de la consulta</p>
-          </div>
+      </div>
+      <form id="report-form" class="form-grid" aria-label="Formulario para generar reportes">
+        <label for="report-type">
+          Tipo de reporte
+          <select id="report-type" name="report_type">
+            <option value="prestamos_por_alumno">Prestamos por alumno</option>
+            <option value="prestamos_por_fecha">Prestamos por fecha</option>
+            <option value="equipos_mas_usados">Equipos mas usados</option>
+          </select>
+        </label>
+        <label for="report-alumno">
+          Alumno
+          <select id="report-alumno" name="alumno_id">
+            <option value="">Todos</option>
+            ${studentOptions}
+          </select>
+        </label>
+        <div class="two-col">
+          <label for="report-fecha-inicio">Fecha inicio<input type="date" id="report-fecha-inicio" name="fecha_inicio" /></label>
+          <label for="report-fecha-fin">Fecha fin<input type="date" id="report-fecha-fin" name="fecha_fin" /></label>
         </div>
-        <div class="table-wrap">
-          <table aria-label="Tabla de resultados del reporte">
-            <thead>
-              <tr><th scope="col">Concepto</th><th scope="col">Total</th><th scope="col">Detalle</th></tr>
-            </thead>
-            <tbody>${reportRows(state.reportData)}</tbody>
-          </table>
+        <div class="two-col">
+          <button class="btn" type="submit" data-report-action="preview">Vista previa</button>
+          <button class="btn-secondary" type="submit" data-report-action="table">Solo consultar</button>
         </div>
-      </article>
-    </div>
+      </form>
+      ${
+        state.lastGeneratedPdfPath
+          ? `<div class="report-quick-actions"><button class="ghost-btn" type="button" data-open-last-pdf="true" aria-label="Abrir ultimo PDF generado">Abrir ultimo PDF</button></div>`
+          : ""
+      }
+    </article>
+    <article class="panel">
+      <div class="panel-header-icon">
+        <div class="icon-circle">${icon("eye")}</div>
+        <div>
+          <h3>${state.reportData?.titulo || "Vista previa del reporte"}</h3>
+          <p>Resultados de la consulta</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table aria-label="Tabla de resultados del reporte">
+          <thead>
+            <tr><th scope="col">Concepto</th><th scope="col">Total</th><th scope="col">Detalle</th></tr>
+          </thead>
+          <tbody>${reportRows(state.reportData)}</tbody>
+        </table>
+      </div>
+    </article>
   `;
 }
 
@@ -997,20 +961,20 @@ export function renderAdminView(root, store) {
   if (!state.adminAuthenticated) {
     root.innerHTML = `
       <section class="login-wrap" role="main">
-        <article class="panel login-card" style="border-left: none; border-top: 3px solid var(--accent);">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <div style="width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%; background: var(--primary-dark); display: grid; place-items: center;">
-              <span style="font-size: 1.75rem; color: white;">#</span>
-            </div>
-            <h2 style="margin: 0; color: var(--primary-dark);">Panel Administrador</h2>
-            <p class="muted" style="margin-top: 6px;">Ingresa tus credenciales para acceder</p>
-          </div>
+        <article class="login-card">
+          <header class="login-head">
+            <div class="login-badge">${icon("lock")}</div>
+            <span class="login-eyebrow">Acceso restringido</span>
+            <h2>Panel Administrador</h2>
+            <p>Ingresa tus credenciales para continuar</p>
+          </header>
           ${bannerMarkup(state.flash)}
           <form id="admin-login-form" class="form-grid" autocomplete="off" aria-label="Formulario de inicio de sesion">
             <label for="login-usuario">Usuario<input id="login-usuario" name="usuario" autocomplete="off" required /></label>
             <label for="login-password">Contrasena<input id="login-password" type="password" name="password" autocomplete="new-password" required /></label>
             <button class="btn btn-block" type="submit">INGRESAR</button>
           </form>
+          <p class="login-note">Solo personal autorizado de la Preparatoria Quince.</p>
         </article>
       </section>
     `;
@@ -1024,20 +988,10 @@ export function renderAdminView(root, store) {
   }
 
   root.innerHTML = `
-    <section class="hero-card">
-      <div>
-        <h2>Dashboard administrador</h2>
-        <p class="muted">Gestion completa de alumnos, equipos, registros, importacion y acceso de administradores.</p>
-      </div>
-      <div class="hero-actions stacked">
-        <div class="admin-chip">Sesion: ${state.currentAdmin?.nombre || state.currentAdmin?.usuario || "Administrador"}</div>
-        <button class="ghost-btn" type="button" data-action="logout-admin" aria-label="Cerrar sesion">Cerrar sesion</button>
-      </div>
-    </section>
-
     ${bannerMarkup(state.flash)}
 
-    <nav class="dashboard-grid dashboard-grid-admin" aria-label="Secciones del administrador">
+    <div class="admin-layout">
+    <nav class="admin-sidebar" aria-label="Secciones del administrador">
       <button class="dashboard-tile ${state.adminSection === "import" ? "active" : ""}" data-section="import" type="button" aria-pressed="${state.adminSection === "import"}">
         <span class="tile-icon">${icon("in")}</span>
         <strong>IMPORTAR</strong>
@@ -1069,12 +1023,14 @@ export function renderAdminView(root, store) {
         <span>Vista y PDF</span>
       </button>
     </nav>
+      <div class="admin-main">
+        ${currentSection(state)}
+      </div>
+    </div>
 
-    ${currentSection(state)}
     ${reportPreviewModal(state)}
   `;
 
-  root.querySelector("[data-action='logout-admin']").addEventListener("click", () => store.actions.logoutAdmin());
   root.querySelectorAll("[data-section]").forEach((button) => {
     button.addEventListener("click", () => store.actions.setAdminSection(button.dataset.section));
   });

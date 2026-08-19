@@ -91,7 +91,6 @@ button, input, select { font: inherit; }
 }
 
 .brand-kicker,
-.welcome-kicker,
 .role-eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.16em;
@@ -148,27 +147,17 @@ button, input, select { font: inherit; }
   display: none;
 }
 
-.hero-card, .panel, .status-banner, .lookup-result, .welcome-card, .role-card {
+.panel, .status-banner, .lookup-result, .role-card {
   background: var(--panel);
   border: 1px solid var(--line);
   box-shadow: var(--shadow-soft);
 }
 
-.hero-card:hover, .panel:hover {
+.panel:hover {
   box-shadow: var(--shadow-md);
 }
 
-.hero-card {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
-  padding: 24px;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  border-left: 4px solid var(--primary);
-}
-
-.hero-card h2, .panel h3, .welcome-card h2 {
+.panel h3 {
   margin: 0 0 10px;
   font-family: var(--font-display);
 }
@@ -215,67 +204,36 @@ button, input, select { font: inherit; }
 
 .role-select {
   display: grid;
-  gap: 28px;
-  min-height: calc(100vh - 180px);
+  gap: 24px;
+  min-height: calc(100vh - 200px);
   align-content: center;
 }
 
-.welcome-card {
-  padding: 38px;
-  border-radius: var(--radius-lg);
+.role-select-title {
+  margin: 0;
   text-align: center;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
-}
-
-.compact-home {
-  padding: 26px 32px;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-}
-
-.compact-home h2 {
-  margin-bottom: 0;
-}
-
-.welcome-kicker {
-  color: var(--primary-dark);
-  margin-bottom: 10px;
-}
-
-.welcome-pills {
-  margin-top: 22px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-}
-
-.welcome-pills span {
-  padding: 9px 14px;
-  border-radius: 999px;
-  background: var(--primary-soft);
-  border: 1px solid var(--line);
-  color: var(--primary-dark);
+  font-size: 1rem;
   font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .role-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 28px;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
 }
 
 .role-card {
-  min-height: 200px;
+  min-height: 240px;
   border-radius: var(--radius-lg);
   border: 0;
   display: grid;
-  align-content: end;
-  gap: 10px;
+  align-content: start;
+  gap: 8px;
   text-align: left;
-  padding: 24px;
+  padding: 28px;
   color: var(--surface);
   cursor: pointer;
   background: var(--primary-dark);
@@ -283,22 +241,39 @@ button, input, select { font: inherit; }
   overflow: hidden;
 }
 
-.role-card::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  right: -50%;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-  pointer-events: none;
+.role-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
 }
 
-.role-card strong,
-.role-card small,
+.role-icon .icon {
+  width: 28px;
+  height: 28px;
+  vertical-align: 0;
+}
+
+.role-key {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  min-width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .role-card .role-eyebrow {
-  position: relative;
-  z-index: 1;
+  opacity: 0.78;
 }
 
 .role-card strong {
@@ -306,9 +281,14 @@ button, input, select { font: inherit; }
   letter-spacing: 0.03em;
 }
 
+.admin-role strong {
+  font-size: 1.6rem;
+}
+
 .role-card small {
   font-size: 1rem;
   line-height: 1.5;
+  padding-right: 46px;
   color: var(--primary-soft);
 }
 
@@ -336,10 +316,6 @@ button, input, select { font: inherit; }
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-.admin-grid.wide {
-  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
 }
 
 .panel {
@@ -794,6 +770,62 @@ input::placeholder {
   color: rgba(255, 255, 255, 0.75);
 }
 
+/* === Admin sidebar layout === */
+.admin-layout {
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.admin-sidebar {
+  display: grid;
+  gap: 8px;
+  position: sticky;
+  top: 18px;
+}
+
+.admin-main {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+.admin-main > * {
+  min-width: 0;
+}
+
+.admin-sidebar .dashboard-tile {
+  min-height: 0;
+  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-areas:
+    "icon title"
+    "icon sub";
+  align-items: center;
+  gap: 0 10px;
+  padding: 12px 14px;
+}
+
+.admin-sidebar .tile-icon {
+  grid-area: icon;
+  margin-bottom: 0;
+}
+
+.admin-sidebar .dashboard-tile strong {
+  grid-area: title;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+}
+
+.admin-sidebar .dashboard-tile span:not(.tile-icon) {
+  grid-area: sub;
+  font-size: 0.74rem;
+}
+
+.admin-sidebar .dashboard-tile:hover {
+  transform: none;
+}
+
 .lookup-result, .status-banner, .import-summary {
   border-radius: var(--radius-md);
   padding: 14px 16px;
@@ -876,24 +908,52 @@ td input, td select {
 
 .muted { color: var(--muted); }
 
-.hero-actions {
+/* === Collapsible inline forms === */
+.inline-form {
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+}
+
+.inline-form > summary {
   display: flex;
-  justify-content: flex-end;
-  align-items: start;
-}
-
-.hero-actions.stacked {
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.admin-chip {
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: var(--primary-soft);
-  border: 1px solid var(--primary-line);
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
   color: var(--primary-dark);
-  font-weight: 700;
+  list-style: none;
+}
+
+.inline-form > summary::-webkit-details-marker {
+  display: none;
+}
+
+.inline-form > summary:hover {
+  background: var(--primary-soft);
+}
+
+.inline-form[open] > summary {
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.inline-form .form-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  padding: 16px 14px;
+}
+
+.inline-form .form-grid .btn {
+  grid-column: 1 / -1;
+  justify-self: start;
+  min-width: 200px;
+}
+
+.panel-reports .form-grid {
+  max-width: 640px;
 }
 
 .section-head {
@@ -916,17 +976,93 @@ td input, td select {
 }
 
 .login-wrap {
-  min-height: calc(100vh - 180px);
+  min-height: calc(100vh - 190px);
   display: grid;
   place-items: center;
-  background: var(--primary-dark);
-  border-radius: var(--radius-lg);
-  padding: 40px;
-  box-shadow: var(--shadow-lg);
+  padding: 32px 20px;
 }
 
 .login-card {
-  width: min(420px, 100%);
+  width: min(400px, 100%);
+  position: relative;
+  overflow: hidden;
+  padding: 34px 30px 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.login-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--primary-dark);
+}
+
+.login-head {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 4px;
+  margin-bottom: 22px;
+}
+
+.login-badge {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 12px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--primary-dark);
+}
+
+.login-badge .icon {
+  width: 26px;
+  height: 26px;
+}
+
+.login-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.login-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.32rem;
+  color: var(--primary-dark);
+}
+
+.login-head p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.login-card .form-grid {
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.login-card .btn-block {
+  margin-top: 4px;
+  min-height: 48px;
+  letter-spacing: 0.04em;
+}
+
+.login-note {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .mode-toggle {
@@ -1451,11 +1587,6 @@ kbd {
   box-shadow: 0 6px 20px rgba(31, 45, 61, 0.10);
 }
 
-.dashboard-grid-admin {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 16px;
-}
-
 /* Sortable table headers */
 .sortable-th {
   cursor: pointer;
@@ -1597,29 +1728,10 @@ kbd {
   background: var(--surface);
 }
 
-/* Records section */
-.panel-records {
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--muted);
-}
-
 /* Reports section */
 .panel-reports {
   border: 1px solid var(--line);
   border-left: 3px solid var(--success);
-}
-
-/* Login card */
-.login-wrap {
-  background: var(--primary-dark);
-  border-radius: var(--radius-lg);
-  padding: 32px;
-}
-
-.login-card {
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
 }
 
 /* Stat card colors - subtle left border */
@@ -1675,22 +1787,6 @@ kbd {
   justify-content: flex-end;
   align-items: start;
   gap: 8px;
-}
-
-.hero-actions.stacked {
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-/* Admin chip */
-.admin-chip {
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: var(--primary-soft);
-  border: 1px solid var(--primary);
-  color: var(--primary-dark);
-  font-weight: 600;
-  font-size: 0.85rem;
 }
 
 /* Report preview modal */
@@ -1960,10 +2056,12 @@ kbd {
 }
 
 @media (max-width: 1180px) {
-  .hero-card,
+  .admin-layout { grid-template-columns: 1fr; }
+  .admin-sidebar {
+    position: static;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .operation-grid,
-  .admin-grid,
-  .admin-grid.wide,
   .dashboard-grid,
   .summary-grid,
   .import-metrics,
@@ -1988,9 +2086,8 @@ kbd {
     padding: 18px;
   }
   .brand-lockup { align-items: flex-start; }
-  .role-card { min-height: 160px; }
+  .role-card { min-height: 170px; }
   .role-card strong { font-size: 1.55rem; }
-  .welcome-pills { justify-content: flex-start; }
   .modal-actions,
   .report-preview-head {
     flex-direction: column;
@@ -2213,6 +2310,33 @@ kbd {
   width: 0.9em;
   height: 0.9em;
   opacity: 0.55;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.topbar-session {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.topbar .btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
 }
 
 /* Header action must read on the dark bar */

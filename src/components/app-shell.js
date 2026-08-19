@@ -1,13 +1,15 @@
+import { icon } from "../icons.js";
 import { renderOperationView } from "../views/operation-view.js";
 import { renderAdminView } from "../views/admin-view.js";
 
 function getAdminFocusSnapshot(root) {
+  const openDetails = [...root.querySelectorAll("details[id][open]")].map((node) => node.id);
   const active = document.activeElement;
   if (!active || !root.contains(active)) {
-    return { scrollY: window.scrollY };
+    return { scrollY: window.scrollY, openDetails };
   }
 
-  const snapshot = { scrollY: window.scrollY, focus: null };
+  const snapshot = { scrollY: window.scrollY, openDetails, focus: null };
 
   if (active.id) {
     snapshot.focus = { type: "id", id: active.id };
@@ -34,6 +36,13 @@ function getAdminFocusSnapshot(root) {
   }
 
   return snapshot;
+}
+
+function restoreOpenDetails(root, snapshot) {
+  snapshot?.openDetails?.forEach((id) => {
+    const node = root.querySelector(`#${id}`);
+    if (node) node.open = true;
+  });
 }
 
 function restoreAdminFocus(root, snapshot) {
@@ -84,11 +93,23 @@ export function createAppShell(root, store) {
               <p>Operacion rapida para estudio, laboratorio y resguardo de equipo.</p>
             </div>
           </div>
-          ${
-            state.role
-              ? `<button class="ghost-btn" type="button" data-action="go-home" aria-label="Volver al inicio">Inicio</button>`
-              : ""
-          }
+          <div class="topbar-actions">
+            ${
+              state.currentAdmin
+                ? `<span class="topbar-session">${icon("user")} ${state.currentAdmin.nombre || state.currentAdmin.usuario}</span>`
+                : ""
+            }
+            ${
+              state.role
+                ? `<button class="ghost-btn" type="button" data-action="go-home" aria-label="Volver al inicio">Inicio</button>`
+                : ""
+            }
+            ${
+              state.currentAdmin
+                ? `<button class="btn-danger" type="button" data-action="logout-admin" aria-label="Cerrar sesion">${icon("out")} Cerrar sesion</button>`
+                : ""
+            }
+          </div>
         </header>
         <main class="content" id="main-content" tabindex="-1"></main>
       </div>
@@ -98,20 +119,21 @@ export function createAppShell(root, store) {
     if (!state.role) {
       content.innerHTML = `
         <section class="role-select" role="main">
-          <div class="welcome-card compact-home">
-            <div class="welcome-kicker">Sistema de control</div>
-            <h2>Seleccione modo de acceso</h2>
-          </div>
+          <h2 class="role-select-title">Seleccione modo de acceso</h2>
           <div class="role-grid">
-            <button class="role-card student-role" data-role="student" type="button">
+            <button class="role-card student-role" data-role="student" type="button" aria-keyshortcuts="1">
+              <span class="role-icon">${icon("package")}</span>
               <span class="role-eyebrow">Atencion rapida</span>
               <strong>ESTUDIANTE</strong>
               <small>Captura codigo, registra prestamo o devolucion y sigue con el siguiente.</small>
+              <span class="role-key" aria-hidden="true">1</span>
             </button>
-            <button class="role-card admin-role" data-role="admin" type="button">
+            <button class="role-card admin-role" data-role="admin" type="button" aria-keyshortcuts="2">
+              <span class="role-icon">${icon("lock")}</span>
               <span class="role-eyebrow">Panel de control</span>
               <strong>ADMINISTRADOR</strong>
-              <small>Gestiona Excel, alumnos, equipos, administradores, registros y reportes.</small>
+              <small>Gestiona Excel, alumnos, equipos y reportes. Requiere contrase\u00f1a.</small>
+              <span class="role-key" aria-hidden="true">2</span>
             </button>
           </div>
         </section>
@@ -124,6 +146,7 @@ export function createAppShell(root, store) {
       renderOperationView(content, store);
     } else {
       renderAdminView(content, store);
+      restoreOpenDetails(root, adminUiSnapshot);
       requestAnimationFrame(() => {
         window.scrollTo({ top: adminUiSnapshot?.scrollY || 0, behavior: "auto" });
         restoreAdminFocus(root, adminUiSnapshot);
@@ -132,6 +155,10 @@ export function createAppShell(root, store) {
 
     root.querySelector("[data-action='go-home']")?.addEventListener("click", () => {
       store.actions.setRole(null);
+    });
+
+    root.querySelector("[data-action='logout-admin']")?.addEventListener("click", () => {
+      store.actions.logoutAdmin();
     });
     
     root.querySelector("#main-content")?.addEventListener("keydown", (e) => {
@@ -144,6 +171,12 @@ export function createAppShell(root, store) {
   store.actions.subscribe(draw);
   if (!initialized) {
     initialized = true;
+    document.addEventListener("keydown", (e) => {
+      if (store.getState().role) return;
+      if (e.target?.closest?.("input, textarea, select")) return;
+      if (e.key === "1") store.actions.setRole("student");
+      if (e.key === "2") store.actions.setRole("admin");
+    });
     store.actions.bootstrap();
   }
 }
