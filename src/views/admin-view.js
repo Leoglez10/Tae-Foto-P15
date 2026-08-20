@@ -1,4 +1,99 @@
 import { icon } from "../icons.js";
+
+const ADMIN_SECTIONS = [
+  { id: "dashboard", icon: "chart", label: "Resumen", desc: "Resumen general del sistema", group: "Principal" },
+  { id: "records", icon: "clipboard", label: "Registros", desc: "Historial de préstamos y devoluciones", group: "Principal" },
+  { id: "students", icon: "users", label: "Alumnos", desc: "Altas y edición de alumnos", group: "Organización" },
+  { id: "equipment", icon: "package", label: "Equipos", desc: "Inventario de equipo", group: "Organización" },
+  { id: "reports", icon: "file", label: "Reportes", desc: "Vista previa y PDF", group: "Análisis" },
+  { id: "import", icon: "in", label: "Importar", desc: "Excel y respaldos", group: "Sistema" },
+  { id: "admins", icon: "user", label: "Admins", desc: "Cuentas del panel", group: "Sistema" }
+];
+
+const QUICK_ACTIONS = ["import", "students", "equipment", "reports", "records"];
+
+function findSection(id) {
+  return ADMIN_SECTIONS.find((section) => section.id === id) || ADMIN_SECTIONS[0];
+}
+
+function sidebarMarkup(state) {
+  const groups = [];
+  ADMIN_SECTIONS.forEach((section) => {
+    const last = groups[groups.length - 1];
+    if (last && last.name === section.group) {
+      last.items.push(section);
+    } else {
+      groups.push({ name: section.group, items: [section] });
+    }
+  });
+
+  const displayName = state.currentAdmin?.nombre || state.currentAdmin?.usuario || "Administrador";
+  const initial = displayName.trim().charAt(0).toUpperCase() || "A";
+
+  const navGroups = groups
+    .map(
+      (group) => `
+        <div class="admin-nav-group">
+          <p class="admin-nav-label">${group.name}</p>
+          ${group.items
+            .map(
+              (item) => `
+                <button class="admin-nav-item ${state.adminSection === item.id ? "active" : ""}" data-section="${item.id}" type="button" aria-pressed="${state.adminSection === item.id}">
+                  <span class="nav-icon">${icon(item.icon)}</span>
+                  <span class="nav-text">${item.label}</span>
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+      `
+    )
+    .join("");
+
+  return `
+    <nav class="admin-sidebar" aria-label="Secciones del administrador">
+      <div class="admin-user">
+        <span class="admin-avatar" aria-hidden="true">${initial}</span>
+        <div class="admin-user-text">
+          <strong>${displayName}</strong>
+          <span>Administrador</span>
+        </div>
+      </div>
+      ${navGroups}
+    </nav>
+  `;
+}
+
+function pageHeadMarkup(state) {
+  const section = findSection(state.adminSection);
+  const summary = state.dashboard;
+  const subtitle = summary
+    ? `${summary.prestamos_activos} préstamos activos \u00b7 ${summary.equipos_disponibles} equipos disponibles \u00b7 ${summary.alumnos_activos} alumnos`
+    : section.desc;
+
+  return `
+    <header class="admin-page-head">
+      <h2>${section.label}</h2>
+      <p>${subtitle}</p>
+    </header>
+  `;
+}
+
+function quickActionsMarkup() {
+  return `
+    <div class="quick-actions">
+      ${QUICK_ACTIONS.map((id) => {
+        const section = findSection(id);
+        return `
+          <button class="quick-action" type="button" data-section="${section.id}" title="${section.desc}">
+            <span class="quick-action-icon">${icon(section.icon)}</span>
+            <strong>${section.label}</strong>
+          </button>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
 function bannerMarkup(flash) {
   if (!flash) return "";
   const glyph = { success: "check-circle", warn: "alert", danger: "close" }[flash.tone] || "alert";
@@ -299,15 +394,24 @@ function printReportPreview(reportData) {
   };
 }
 
+function statCard(id, section, glyph, label, value) {
+  return `
+    <button type="button" class="stat ${id}" data-section="${section}" title="Ver ${label.toLowerCase()}">
+      <span class="stat-label">${icon(glyph)} ${label}</span>
+      <strong>${value}</strong>
+    </button>
+  `;
+}
+
 function dashboardSummary(summary, activeAdmins) {
   if (!summary) return "";
   return `
     <div class="summary-grid">
-      <article class="stat stat-alumnos"><span style="font-size: 1.5rem;">${icon("users")} </span> Alumnos<strong>${summary.alumnos_activos}</strong></article>
-      <article class="stat stat-disponibles"><span style="font-size: 1.5rem;">${icon("check-circle")} </span> Disponibles<strong>${summary.equipos_disponibles}</strong></article>
-      <article class="stat stat-prestados"><span style="font-size: 1.5rem;">${icon("package")} </span> Prestados<strong>${summary.prestamos_activos}</strong></article>
-      <article class="stat stat-registros"><span style="font-size: 1.5rem;">${icon("clipboard")} </span> Registros<strong>${summary.registros_totales}</strong></article>
-      <article class="stat stat-admins"><span style="font-size: 1.5rem;">${icon("user")} </span> Admins<strong>${activeAdmins}</strong></article>
+      ${statCard("stat-alumnos", "students", "users", "Alumnos", summary.alumnos_activos)}
+      ${statCard("stat-disponibles", "equipment", "check-circle", "Disponibles", summary.equipos_disponibles)}
+      ${statCard("stat-prestados", "equipment", "package", "Prestados", summary.prestamos_activos)}
+      ${statCard("stat-registros", "records", "clipboard", "Registros", summary.registros_totales)}
+      ${statCard("stat-admins", "admins", "user", "Admins", activeAdmins)}
     </div>
   `;
 }
@@ -933,16 +1037,8 @@ function currentSection(state) {
       return reportsSection(state);
     default:
       return `
-        <div class="panel">
-          <div class="panel-header-icon">
-            <div class="icon-circle">${icon("chart")} </div>
-            <div>
-              <h3>Resumen del Dashboard</h3>
-              <p>Estadísticas generales del sistema</p>
-            </div>
-          </div>
-          ${dashboardSummary(state.dashboard, state.admins.filter((admin) => admin.activo).length)}
-        </div>
+        ${quickActionsMarkup()}
+        ${dashboardSummary(state.dashboard, state.admins.filter((admin) => admin.activo).length)}
       `;
   }
 }
@@ -991,39 +1087,9 @@ export function renderAdminView(root, store) {
     ${bannerMarkup(state.flash)}
 
     <div class="admin-layout">
-    <nav class="admin-sidebar" aria-label="Secciones del administrador">
-      <button class="dashboard-tile ${state.adminSection === "import" ? "active" : ""}" data-section="import" type="button" aria-pressed="${state.adminSection === "import"}">
-        <span class="tile-icon">${icon("in")}</span>
-        <strong>IMPORTAR</strong>
-        <span>Especificaciones</span>
-      </button>
-      <button class="dashboard-tile ${state.adminSection === "students" ? "active" : ""}" data-section="students" type="button" aria-pressed="${state.adminSection === "students"}">
-        <span class="tile-icon">${icon("users")}</span>
-        <strong>ALUMNOS</strong>
-        <span>Altas y edicion</span>
-      </button>
-      <button class="dashboard-tile ${state.adminSection === "equipment" ? "active" : ""}" data-section="equipment" type="button" aria-pressed="${state.adminSection === "equipment"}">
-        <span class="tile-icon">${icon("package")}</span>
-        <strong>EQUIPOS</strong>
-        <span>Inventario</span>
-      </button>
-      <button class="dashboard-tile ${state.adminSection === "admins" ? "active" : ""}" data-section="admins" type="button" aria-pressed="${state.adminSection === "admins"}">
-        <span class="tile-icon">${icon("user")}</span>
-        <strong>ADMINS</strong>
-        <span>Agregar y editar</span>
-      </button>
-      <button class="dashboard-tile ${state.adminSection === "records" ? "active" : ""}" data-section="records" type="button" aria-pressed="${state.adminSection === "records"}">
-        <span class="tile-icon">${icon("clipboard")}</span>
-        <strong>REGISTROS</strong>
-        <span>Historial</span>
-      </button>
-      <button class="dashboard-tile ${state.adminSection === "reports" ? "active" : ""}" data-section="reports" type="button" aria-pressed="${state.adminSection === "reports"}">
-        <span class="tile-icon">${icon("chart")}</span>
-        <strong>REPORTES</strong>
-        <span>Vista y PDF</span>
-      </button>
-    </nav>
+    ${sidebarMarkup(state)}
       <div class="admin-main">
+        ${pageHeadMarkup(state)}
         ${currentSection(state)}
       </div>
     </div>

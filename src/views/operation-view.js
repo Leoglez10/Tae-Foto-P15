@@ -1,31 +1,81 @@
 import { icon } from "../icons.js";
-let toastTimeout = null;
-function showToast(message, type = "success") {
-  const existing = document.querySelector(".op-toast");
-  if (existing) existing.remove();
-  if (toastTimeout) clearTimeout(toastTimeout);
+let confirmTimeout = null;
+const RESULT_SECONDS = 2;
 
-  const toast = document.createElement("div");
-  toast.className = `op-toast ${type}`;
-  toast.setAttribute("role", "status");
-  toast.setAttribute("aria-live", "polite");
-  toast.innerHTML = `
-    <span class="op-toast-icon">${icon(type === "success" ? "check" : "alert")}</span>
-    <span class="op-toast-msg">${message}</span>
+// A corner toast was too easy to miss across the room, so a successful
+// operation takes over the screen: big icon, big equipment number, one color
+// per operation type (green = prestamo, blue = devolucion).
+function showResult({ tone = "prestamo", title, studentName, equipo }) {
+  document.querySelector(".op-result")?.remove();
+  if (confirmTimeout) clearTimeout(confirmTimeout);
+
+  const overlay = document.createElement("div");
+  overlay.className = `op-result ${tone}`;
+  overlay.setAttribute("role", "status");
+  overlay.setAttribute("aria-live", "assertive");
+  overlay.innerHTML = `
+    <div class="op-result-card">
+      <div class="op-result-icon">${icon("check")}</div>
+      <h2 class="op-result-title">${title}</h2>
+      ${equipo ? `
+        <div class="op-result-equipo">
+          <span class="op-result-equipo-label">Equipo</span>
+          <span class="op-result-equipo-num">${equipo}</span>
+        </div>
+      ` : ""}
+      ${studentName ? `<p class="op-result-student">${studentName}</p>` : ""}
+      <p class="op-result-hint">Cierra en <b class="op-result-count">${RESULT_SECONDS}</b>s &middot; toque para continuar</p>
+      <div class="op-result-bar"><span style="animation-duration:${RESULT_SECONDS}s"></span></div>
+    </div>
   `;
-  document.body.appendChild(toast);
 
-  requestAnimationFrame(() => toast.classList.add("show"));
+  const dismiss = () => {
+    clearInterval(countdown);
+    overlay.classList.remove("show");
+    setTimeout(() => overlay.remove(), 250);
+  };
 
-  toastTimeout = setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300);
-  }, 2500);
+  let remaining = RESULT_SECONDS;
+  const counter = overlay.querySelector(".op-result-count");
+  const countdown = setInterval(() => {
+    remaining -= 1;
+    counter.textContent = Math.max(remaining, 0);
+  }, 1000);
+
+  overlay.addEventListener("click", dismiss);
+  // The code field keeps focus underneath, so a scan or keypress must clear the
+  // overlay instead of typing behind it.
+  document.addEventListener("keydown", dismiss, { once: true });
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add("show"));
+  confirmTimeout = setTimeout(dismiss, RESULT_SECONDS * 1000);
 }
 
 function bannerMarkup(flash) {
   if (!flash) return "";
   return `<div class="status-banner ${flash.tone}" role="alert" aria-live="polite">${flash.message}</div>`;
+}
+
+// First letter of the first two words: the student recognizes themselves by the
+// initials before they finish reading the name.
+function initials(name) {
+  return (name || "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word[0] || "")
+    .join("")
+    .toUpperCase();
+}
+
+function infoTag(label, value) {
+  if (!value) return "";
+  return `
+    <span class="info-tag">
+      <span class="info-tag-label">${label}</span>
+      <span class="info-tag-value">${value}</span>
+    </span>
+  `;
 }
 
 function studentCard(student) {
@@ -35,7 +85,7 @@ function studentCard(student) {
         <div class="student-avatar empty">${icon("user")}</div>
         <div class="student-name-display">
           <h3 class="student-name-empty">Sin alumno seleccionado</h3>
-          <p class="muted">Capture el codigo y presione Enter</p>
+          <p class="muted">Escriba el codigo y toque Buscar</p>
         </div>
         <span class="pill-tag neutral">Esperando codigo</span>
       </div>
@@ -45,20 +95,24 @@ function studentCard(student) {
   const hasLoan = student.prestamo_activo;
   return `
     <div class="student-hero ${hasLoan ? "has-loan" : ""}">
-      <div class="student-avatar ${hasLoan ? "warning" : "success"}">
-        ${icon(hasLoan ? "alert" : "check")}
+      <div class="student-identity">
+        <div class="student-avatar ${hasLoan ? "warning" : "success"}">
+          <span class="student-initials">${initials(student.nombre)}</span>
+          <span class="student-status-dot">${icon(hasLoan ? "alert" : "check")}</span>
+        </div>
+        <div class="student-name-display">
+          <span class="student-eyebrow">Alumno identificado</span>
+          <h3 class="student-name">${student.nombre}</h3>
+        </div>
+        <span class="pill-tag ${hasLoan ? "warn" : "success"}">
+          ${hasLoan ? "CON PRESTAMO" : "Disponible"}
+        </span>
       </div>
-      <div class="student-name-display">
-        <h3 class="student-name">${student.nombre}</h3>
-        <p class="student-info">
-          <span class="info-tag">${student.materia}</span>
-          <span class="info-tag">${student.grupo}</span>
-          <span class="info-tag">${student.profesor}</span>
-        </p>
-      </div>
-      <span class="pill-tag ${hasLoan ? "warn" : "success"}">
-        ${hasLoan ? "CON PRESTAMO" : "Disponible"}
-      </span>
+      <p class="student-info">
+        ${infoTag("Materia", student.materia)}
+        ${infoTag("Grupo", student.grupo)}
+        ${infoTag("Profesor", student.profesor)}
+      </p>
       ${hasLoan ? `
         <div class="loan-badge">
           <span class="loan-label">Equipo prestado:</span>
@@ -131,22 +185,27 @@ export function renderOperationView(root, store) {
 
     <section class="operation-layout" id="operation-panel" role="tabpanel" aria-label="Operacion de prestamo">
       <div class="left-column">
-        <article class="panel panel-code">
+        <article class="panel panel-code" data-step="1">
           <label for="student-code" class="step-title"><span class="step-num">1</span> Escanea tu codigo</label>
-          <input
-            id="student-code"
-            name="codigo"
-            autocomplete="off"
-            class="big-input"
-            placeholder="Escanear o escribir codigo..."
-            value="${state.selectedStudent?.codigo || ""}"
-            aria-describedby="code-hint"
-          />
-          <span id="code-hint" class="kbd-hint">Presione <kbd>Enter</kbd> para buscar &middot; <kbd>Esc</kbd> para limpiar</span>
+          <div class="code-row">
+            <input
+              id="student-code"
+              name="codigo"
+              autocomplete="off"
+              class="big-input"
+              placeholder="Escanear o escribir codigo..."
+              value="${state.selectedStudent?.codigo || ""}"
+              aria-describedby="code-hint"
+            />
+            <button type="button" class="btn btn-find" id="find-btn" aria-label="Buscar alumno por codigo">
+              ${icon("search")} Buscar
+            </button>
+          </div>
+          <span id="code-hint" class="kbd-hint">Presione <kbd>Enter</kbd> o toque <b>Buscar</b> &middot; <kbd>Esc</kbd> para limpiar</span>
         </article>
 
         ${!hasLoan ? `
-        <article class="panel panel-equipment" aria-label="Seleccionar equipo">
+        <article class="panel panel-equipment" data-step="2" aria-label="Seleccionar equipo">
           <h3 class="step-title">
             <span class="step-num">2</span> Elige el equipo
             ${availableEquipment.length > 12 ? `
@@ -169,7 +228,7 @@ export function renderOperationView(root, store) {
         </article>
         ` : ""}
 
-        <div class="op-actions">
+        <div class="op-actions" data-step="3">
           <input name="observaciones" id="observaciones" class="obs-input" placeholder="${hasLoan ? "Observaciones de la devolucion (opcional)" : "Observaciones (opcional)"}" aria-label="Observaciones adicionales" />
           <button class="btn btn-block btn-xl ${submitClass}" id="submit-btn" type="button" aria-label="${hasLoan ? "Registrar devolucion" : "Registrar prestamo"}">
             <span class="step-num">${hasLoan ? "2" : "3"}</span> ${submitLabel}
@@ -193,22 +252,51 @@ export function renderOperationView(root, store) {
   const codeInput = root.querySelector("#student-code");
   const submitBtn = root.querySelector("#submit-btn");
   const equipmentInput = root.querySelector("#selected-equipment-id");
+  const findBtn = root.querySelector("#find-btn");
+
+  // Highlights the step the student has to act on right now, and marks the
+  // previous ones as done. Equipment picking never re-renders the view, so the
+  // sync runs locally instead of relying on store updates.
+  const syncSteps = () => {
+    const hasStudent = Boolean(state.selectedStudent);
+    const needsEquipment = hasStudent && !hasLoan;
+    const hasEquipment = Boolean(equipmentInput?.value);
+
+    const current = !hasStudent ? 1 : needsEquipment && !hasEquipment ? 2 : 3;
+
+    root.querySelectorAll("[data-step]").forEach((node) => {
+      const step = Number(node.dataset.step);
+      node.classList.toggle("step-active", step === current);
+      node.classList.toggle("step-done", step < current);
+    });
+
+    submitBtn.disabled = !hasStudent || (needsEquipment && !hasEquipment);
+  };
+
+  const runSearch = async () => {
+    const code = codeInput.value.trim();
+    if (!code) {
+      codeInput.focus();
+      return;
+    }
+    await store.actions.findStudentByCode(code);
+  };
 
   codeInput.addEventListener("keydown", async (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      const code = codeInput.value.trim();
-      if (code) {
-        await store.actions.findStudentByCode(code);
-      }
+      await runSearch();
     }
   });
+
+  findBtn.addEventListener("click", runSearch);
 
   root.querySelectorAll(".equipment-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       root.querySelectorAll(".equipment-btn").forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
       if (equipmentInput) equipmentInput.value = btn.dataset.equipmentId;
+      syncSteps();
     });
     btn.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
@@ -241,6 +329,7 @@ export function renderOperationView(root, store) {
     if (noMatch) noMatch.hidden = true;
     root.querySelector("#observaciones").value = "";
     codeInput.value = "";
+    syncSteps();
     codeInput.focus();
   };
 
@@ -274,15 +363,26 @@ export function renderOperationView(root, store) {
         equipo_id: equipoIdDev,
         observaciones: observaciones || null
       });
-      showToast("Equipo devuelto exitosamente", "success");
+      showResult({
+        tone: "devolucion",
+        title: "EQUIPO DEVUELTO",
+        studentName: student.nombre,
+        equipo: student.prestamo_activo.equipo_numero
+      });
     } else if (equipoId) {
+      const equipo = availableEquipment.find((item) => String(item.id) === String(equipoId));
       await store.actions.registerStudentOperation({
         codigo: student.codigo,
         tipo: "prestamo",
         equipo_id: Number(equipoId),
         observaciones: observaciones || null
       });
-      showToast("Prestamo registrado", "success");
+      showResult({
+        tone: "prestamo",
+        title: "PRESTAMO REGISTRADO",
+        studentName: student.nombre,
+        equipo: equipo?.numero
+      });
     }
 
     resetForm();
@@ -294,5 +394,6 @@ export function renderOperationView(root, store) {
     }
   });
 
+  syncSteps();
   codeInput.focus();
 }
