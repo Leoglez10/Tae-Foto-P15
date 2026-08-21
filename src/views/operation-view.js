@@ -193,7 +193,7 @@ export function renderOperationView(root, store) {
               name="codigo"
               autocomplete="off"
               class="big-input"
-              placeholder="Escanear o escribir codigo..."
+              placeholder="Escribir codigo..."
               value="${state.selectedStudent?.codigo || ""}"
               aria-describedby="code-hint"
             />
@@ -231,7 +231,7 @@ export function renderOperationView(root, store) {
         <div class="op-actions" data-step="3">
           <input name="observaciones" id="observaciones" class="obs-input" placeholder="${hasLoan ? "Observaciones de la devolucion (opcional)" : "Observaciones (opcional)"}" aria-label="Observaciones adicionales" />
           <button class="btn btn-block btn-xl ${submitClass}" id="submit-btn" type="button" aria-label="${hasLoan ? "Registrar devolucion" : "Registrar prestamo"}">
-            <span class="step-num">${hasLoan ? "2" : "3"}</span> ${submitLabel}
+            ${submitLabel}
           </button>
         </div>
       </div>
@@ -388,10 +388,16 @@ export function renderOperationView(root, store) {
     resetForm();
   });
 
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      resetForm();
-    }
+  // Escape clears the form. It listens on #operation-panel -- not on `document`
+  // or on `root` -- for two reasons: that node is rebuilt by innerHTML on every
+  // render, so the listener dies with it instead of stacking up; and being a
+  // descendant of #main-content, stopping propagation here keeps the shell's own
+  // Escape handler (which drops the role and leaves the screen) from firing.
+  root.querySelector("#operation-panel").addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    event.stopPropagation();
+    resetForm();
   });
 
   syncSteps();

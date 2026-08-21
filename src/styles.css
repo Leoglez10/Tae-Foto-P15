@@ -2173,9 +2173,25 @@ kbd {
 
 /* Keyboard hint */
 .kbd-hint {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-top: 4px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  /* --muted sits around 3.6:1 on the light surface: too low for text this
+     small, so the hint uses the darker ink tone instead. */
+  color: var(--primary-dark);
+  margin-top: 10px;
+}
+
+.kbd-hint kbd {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 0.85rem;
+  box-shadow: 0 1px 0 var(--line-strong);
+}
+
+.kbd-hint b {
+  color: var(--ink);
 }
 
 kbd {
@@ -2581,11 +2597,6 @@ kbd {
   flex-shrink: 0;
 }
 
-.btn .step-num,
-.btn-danger .step-num {
-  background: rgba(255, 255, 255, 0.25);
-  margin-right: 8px;
-}
 
 .op-actions {
   display: flex;
@@ -2745,21 +2756,28 @@ kbd {
   height: 1.35em;
 }
 
-/* Active step: vibrant ring + pulse so the eye lands on what to do next */
+/* Active step: bright tinted surface + glow ring so the whole AREA pops,
+   not only its border. */
 [data-step].step-active {
-  border-color: #1E88E5;
-  box-shadow: 0 0 0 4px rgba(30, 136, 229, 0.28), 0 8px 24px rgba(30, 136, 229, 0.22);
+  border-color: #00B4FF;
+  background: linear-gradient(135deg, #D6EEFF 0%, #E9F7FF 55%, #FFFFFF 100%);
+  box-shadow:
+    0 0 0 6px rgba(0, 180, 255, 0.50),
+    0 0 40px rgba(0, 180, 255, 0.60),
+    0 12px 36px rgba(0, 120, 200, 0.30);
   animation: step-pulse 1.5s ease-in-out infinite;
 }
 
 [data-step].step-active .step-num {
-  background: #1E88E5;
+  background: linear-gradient(135deg, #22C7FF 0%, #0B78D0 100%);
   color: #ffffff;
+  box-shadow: 0 0 20px rgba(0, 180, 255, 0.95), 0 0 6px rgba(255, 255, 255, 0.9) inset;
   animation: step-num-pulse 1.5s ease-in-out infinite;
 }
 
 [data-step].step-active .step-title {
-  color: #0D5FA8;
+  color: #01508F;
+  text-shadow: 0 0 16px rgba(0, 180, 255, 0.45);
 }
 
 /* Completed steps step back visually */
@@ -2772,8 +2790,46 @@ kbd {
 }
 
 @keyframes step-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.22), 0 6px 18px rgba(30, 136, 229, 0.16); }
-  50%      { box-shadow: 0 0 0 8px rgba(30, 136, 229, 0.14), 0 10px 30px rgba(30, 136, 229, 0.28); }
+  0%, 100% {
+    box-shadow:
+      0 0 0 5px rgba(0, 180, 255, 0.45),
+      0 0 30px rgba(0, 180, 255, 0.45),
+      0 10px 26px rgba(0, 120, 200, 0.22);
+  }
+  50% {
+    box-shadow:
+      0 0 0 13px rgba(0, 180, 255, 0.26),
+      0 0 56px rgba(0, 180, 255, 0.80),
+      0 14px 40px rgba(0, 120, 200, 0.36);
+  }
+}
+
+/* Submit button of the active step: it blinks so the student sees the action
+   they have to press right now. */
+[data-step].step-active #submit-btn {
+  animation: step-cta-blink 0.7s ease-in-out infinite;
+}
+
+/* Hover stops the blink: the student already found the button, so it just
+   holds a steady glow instead of pulsing. */
+[data-step].step-active #submit-btn:hover,
+[data-step].step-active #submit-btn:focus-visible {
+  animation: none;
+  filter: brightness(1.35) saturate(1.2);
+  box-shadow: 0 0 40px rgba(0, 180, 255, 0.85), 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+@keyframes step-cta-blink {
+  0%, 100% {
+    filter: brightness(0.92) saturate(1);
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(0, 180, 255, 0.6), 0 6px 18px rgba(0, 0, 0, 0.18);
+  }
+  50% {
+    filter: brightness(1.38) saturate(1.18);
+    transform: scale(1.025);
+    box-shadow: 0 0 0 10px rgba(0, 180, 255, 0), 0 0 38px rgba(0, 180, 255, 0.72), 0 6px 18px rgba(0, 0, 0, 0.18);
+  }
 }
 
 @keyframes step-num-pulse {
@@ -2785,6 +2841,24 @@ kbd {
   [data-step].step-active,
   [data-step].step-active .step-num {
     animation: none;
+  }
+
+  /* The CTA keeps blinking even here: it is the only cue telling the student
+     what to press. Motion is dropped (no scale, no expanding ring), only
+     brightness cycles, at 1.4Hz -- well under the 3Hz flash threshold. */
+  [data-step].step-active #submit-btn {
+    animation: step-cta-blink-static 0.7s ease-in-out infinite;
+  }
+}
+
+@keyframes step-cta-blink-static {
+  0%, 100% {
+    filter: brightness(0.92) saturate(1);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  }
+  50% {
+    filter: brightness(1.38) saturate(1.18);
+    box-shadow: 0 0 38px rgba(0, 180, 255, 0.72), 0 6px 18px rgba(0, 0, 0, 0.18);
   }
 }
 
