@@ -1,8 +1,55 @@
-# Préstamo de Equipos — TAE Foto App
+<div align="center">
 
-Aplicación de escritorio para Windows que controla el préstamo de equipos (laptops, cámaras y otros activos) de la Preparatoria Quince. Los alumnos escanean su código para registrar un préstamo o una devolución en segundos, mientras el personal administrativo gestiona alumnos, inventario, reportes y respaldos desde un panel protegido. La operación es local: los datos se guardan en SQLite y no dependen de una conexión a internet.
+<img src="img/logo-p15.png" alt="Logo Preparatoria 15" width="150"/>
 
-[Descargar la versión para Windows](https://github.com/Leoglez10/Tae-Foto-P15/releases/tag/auto) · [Ver el repositorio](https://github.com/Leoglez10/Tae-Foto-P15) · [Reportar un problema](https://github.com/Leoglez10/Tae-Foto-P15/issues)
+# Préstamo de Equipos — TAE Foto
+
+### Control de préstamos de equipo fotográfico y audiovisual para la Preparatoria Quince
+
+[![CI — Build Windows Installer](https://github.com/Leoglez10/Tae-Foto-P15/actions/workflows/build-windows.yml/badge.svg)](https://github.com/Leoglez10/Tae-Foto-P15/actions/workflows/build-windows.yml)
+[![Versión](https://img.shields.io/badge/versi%C3%B3n-0.1.0-blue)]()
+[![Plataforma](https://img.shields.io/badge/plataforma-Windows%2010%2F11-blue)]()
+[![Licencia](https://img.shields.io/badge/licencia-no%20definida-lightgrey)](#️-licencia-y-uso)
+[![Autor](https://img.shields.io/badge/autor-Leonardo%20Gonzalez-purple)](https://github.com/Leoglez10)
+
+![Tauri](https://img.shields.io/badge/Tauri-v2-24C8DB?logo=tauri&logoColor=white)
+![Rust](https://img.shields.io/badge/Rust-edition%202021-000000?logo=rust&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-vanilla%20ESM-F7DF1E?logo=javascript&logoColor=black)
+![SQLite](https://img.shields.io/badge/SQLite-local-003B57?logo=sqlite&logoColor=white)
+![Offline](https://img.shields.io/badge/100%25-offline-success)
+
+[**⬇️ Descargar para Windows**](https://github.com/Leoglez10/Tae-Foto-P15/releases/tag/auto) ·
+[**📂 Repositorio**](https://github.com/Leoglez10/Tae-Foto-P15) ·
+[**🐞 Reportar un problema**](https://github.com/Leoglez10/Tae-Foto-P15/issues)
+
+</div>
+
+---
+
+> **Este README está escrito para CUALQUIER persona**: profesor, administrador, becario o alguien que nunca programó. Si eres programador, salta a [Mantenimiento y desarrollo](#-mantenimiento-y-desarrollo).
+
+> 🚀 **¿Tienes prisa?**
+> 1. Instala la app → [Instalar en Windows](#instalar-en-windows)
+> 2. Entra al panel y cambia la cuenta de fábrica `admin` / `1234` → [Acceso al panel](#acceso-al-panel)
+> 3. Haz tu primer respaldo → [Respaldos y restauración](#respaldos-y-restauración)
+>
+> El resto es opcional: [prestar y devolver equipos](#cómo-prestar-un-equipo), [importar alumnos desde Excel](#importar-usuarios-desde-excel) o [entender la arquitectura](#-mantenimiento-y-desarrollo).
+
+---
+
+## 🎯 ¿Qué es esta app?
+
+Es un **programa de escritorio para Windows** (se instala en una computadora, NO se abre en el navegador ni en el celular) que controla el préstamo de equipos —laptops, cámaras y otros activos— de la Preparatoria Quince.
+
+Los alumnos escanean su código para registrar un préstamo o una devolución en segundos, mientras el personal administrativo gestiona alumnos, inventario, reportes y respaldos desde un panel protegido.
+
+La app responde a 3 preguntas básicas:
+
+1. **¿Qué equipo prestamos?**
+2. **¿A quién se lo prestamos?**
+3. **¿Cuándo nos lo devolvieron?**
+
+> 💡 Piensa en ella como una **libreta digital de préstamos** que no se pierde, no se borra y no depende de internet: los datos viven en SQLite, dentro de esa computadora.
 
 | Dato | Estado |
 |---|---|
@@ -15,7 +62,22 @@ Aplicación de escritorio para Windows que controla el préstamo de equipos (lap
 > [!IMPORTANT]
 > La instalación inicial crea el acceso `admin` / `1234` y la versión actual guarda las contraseñas administrativas en texto plano. Cambie esa contraseña en el primer uso, limite el acceso al equipo y nunca comparta la base de datos ni los Excel con datos de alumnos en repositorios o tickets públicos.
 
-## Inicio rápido
+---
+
+## 👥 ¿Para quién es?
+
+| Rol | Qué hace en la app | Empiece aquí |
+|---|---|---|
+| 🎓 **Profesor / responsable de entrega** | Presta y recibe equipos en el modo ESTUDIANTE. **No necesita contraseña.** | [Guía para profesores](#-guía-para-profesores) |
+| 🛡 **Administrador** | Entra con usuario + contraseña: alumnos, inventario, reportes, respaldos e importaciones. | [Guía para administradores](#-guía-para-administradores) |
+| 🔧 **Soporte / mantenimiento** | Instala, actualiza, compila y depura la aplicación. | [Mantenimiento y desarrollo](#-mantenimiento-y-desarrollo) |
+| 📥 **Encargado de listas** | Carga alumnos e historiales desde Excel. | [Importación de datos: dos rutas](#importación-de-datos-dos-rutas) |
+
+> ⚠️ **Importante**: la app está pensada para **una computadora compartida** (la de la oficina o la coordinación). No es una app web ni un sistema en la nube: los datos viven **dentro de esa computadora**.
+
+---
+
+## ⚡ Inicio rápido
 
 ### Instalar en Windows
 
@@ -27,52 +89,47 @@ Aplicación de escritorio para Windows que controla el préstamo de equipos (lap
 
 WebView2 suele venir instalado en Windows 10 y 11. Si la aplicación no abre o muestra una ventana vacía, instale el [runtime WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) y vuelva a intentarlo.
 
-### Elegir la guía correcta
+## 📑 Tabla de contenidos
 
-| Si usted es… | Empiece aquí |
-|---|---|
-| Profesor o responsable de entregar equipos | [Guía para profesores](#1-guía-para-profesores) |
-| Administrador de alumnos, inventario o respaldos | [Guía para administradores](#2-guía-para-administradores) |
-| Persona de soporte o mantenimiento | [Mantenimiento / Desarrolladores](#3-mantenimiento--desarrolladores) |
-| Responsable de importar listas o historiales | [Importación de datos: dos rutas](#importación-de-datos-dos-rutas) |
-
-## Índice
-
-- [Inicio rápido](#inicio-rápido)
-- [1. Guía para profesores](#1-guía-para-profesores)
-  - [¿Qué hace la aplicación?](#qué-hace-la-aplicación)
-  - [Cómo prestar un equipo](#cómo-prestar-un-equipo)
-  - [Cómo registrar una devolución](#cómo-registrar-una-devolución)
-  - [Si algo falla](#si-algo-falla)
-- [2. Guía para administradores](#2-guía-para-administradores)
-  - [Acceso al panel](#acceso-al-panel)
-  - [Secciones del panel](#secciones-del-panel)
-  - [Alumnos, equipos y administradores](#alumnos-equipos-y-administradores)
-  - [Importar usuarios desde Excel](#importar-usuarios-desde-excel)
-  - [Respaldos y restauración](#respaldos-y-restauración)
-  - [Dónde viven los datos](#dónde-viven-los-datos)
-- [3. Mantenimiento / Desarrolladores](#3-mantenimiento--desarrolladores)
-  - [Stack técnico](#stack-técnico)
-  - [Arquitectura de carpetas](#arquitectura-de-carpetas)
-  - [Esquema de base de datos](#esquema-de-base-de-datos)
-  - [Comandos Rust expuestos al frontend](#comandos-rust-expuestos-al-frontend)
-  - [Flujo de préstamo y devolución](#flujo-de-préstamo-y-devolución)
-  - [Importación de datos: dos rutas](#importación-de-datos-dos-rutas)
-  - [Script de importación PowerShell](#script-de-importación-powershell)
-  - [Plantillas Excel incluidas](#plantillas-excel-incluidas)
-  - [Build y release](#build-y-release)
-  - [Desarrollo y depuración](#desarrollo-y-depuración)
-  - [Respaldo y migración del esquema](#respaldo-y-migración-del-esquema)
-  - [Problemas conocidos](#problemas-conocidos)
-- [4. Prompt para la Guía de Importación de Usuarios](#4-prompt-para-la-guía-de-importación-de-usuarios)
-- [5. Seguridad y privacidad](#5-seguridad-y-privacidad)
-- [6. Soporte](#6-soporte)
-- [7. Créditos](#7-créditos)
-- [8. Licencia](#8-licencia)
+1. [¿Qué es esta app?](#-qué-es-esta-app)
+2. [¿Para quién es?](#-para-quién-es)
+3. [Inicio rápido](#-inicio-rápido)
+4. [Guía para profesores](#-guía-para-profesores)
+   - [¿Qué hace la aplicación?](#qué-hace-la-aplicación)
+   - [Cómo prestar un equipo](#cómo-prestar-un-equipo)
+   - [Cómo registrar una devolución](#cómo-registrar-una-devolución)
+   - [Si algo falla](#si-algo-falla)
+5. [Guía para administradores](#-guía-para-administradores)
+   - [Acceso al panel](#acceso-al-panel)
+   - [Secciones del panel](#secciones-del-panel)
+   - [Alumnos, equipos y administradores](#alumnos-equipos-y-administradores)
+   - [Importar usuarios desde Excel](#importar-usuarios-desde-excel)
+   - [Respaldos y restauración](#respaldos-y-restauración)
+   - [Dónde viven los datos](#dónde-viven-los-datos)
+6. [Mantenimiento y desarrollo](#-mantenimiento-y-desarrollo)
+   - [Stack técnico](#stack-técnico)
+   - [Arquitectura de carpetas](#arquitectura-de-carpetas)
+   - [Esquema de base de datos](#esquema-de-base-de-datos)
+   - [Comandos Rust expuestos al frontend](#comandos-rust-expuestos-al-frontend)
+   - [Flujo de préstamo y devolución](#flujo-de-préstamo-y-devolución)
+   - [Importación de datos: dos rutas](#importación-de-datos-dos-rutas)
+   - [Script de importación PowerShell](#script-de-importación-powershell)
+   - [Plantillas Excel incluidas](#plantillas-excel-incluidas)
+   - [Build y release](#build-y-release)
+   - [Desarrollo y depuración](#desarrollo-y-depuración)
+   - [Respaldo y migración del esquema](#respaldo-y-migración-del-esquema)
+   - [Problemas conocidos](#problemas-conocidos)
+7. [Prompt de IA para importar usuarios](#-prompt-de-ia-para-importar-usuarios)
+8. [Seguridad y privacidad](#-seguridad-y-privacidad)
+9. [Soporte](#-soporte)
+10. [Versionado](#-versionado)
+11. [Cómo contribuir](#-cómo-contribuir)
+12. [Licencia y uso](#️-licencia-y-uso)
+13. [Créditos](#-créditos)
 
 ---
 
-## 1. Guía para profesores
+## 🎓 Guía para profesores
 
 ### ¿Qué hace la aplicación?
 
@@ -128,7 +185,7 @@ Atajos útiles:
 
 ---
 
-## 2. Guía para administradores
+## 🛡 Guía para administradores
 
 ### Acceso al panel
 
@@ -234,7 +291,7 @@ Ruta completa típica: `C:\Users\<SU_USUARIO>\AppData\Roaming\com.institucion.pr
 
 ---
 
-## 3. Mantenimiento / Desarrolladores
+## 🧰 Mantenimiento y desarrollo
 
 ### Stack técnico
 
@@ -541,7 +598,7 @@ npm run dev          # = tauri dev; abre la ventana con binario debug y devtools
 
 ---
 
-## 4. Prompt para la Guía de Importación de Usuarios
+## 🤖 Prompt de IA para importar usuarios
 
 El siguiente bloque es una ayuda opcional para quien use un asistente de IA durante la importación. Despliéguelo, cópielo completo y agregue la ruta de su archivo Excel donde se indica.
 
@@ -654,7 +711,7 @@ Mi archivo Excel está en: <PEGA_AQUÍ_LA_RUTA_DE_TU_ARCHIVO_EXCEL>
 
 ---
 
-## 5. Seguridad y privacidad
+## 🔐 Seguridad y privacidad
 
 Esta aplicación administra datos identificables de alumnos. Trate la base SQLite, los respaldos, los Excel y los reportes como información institucional sensible.
 
@@ -672,7 +729,7 @@ Esta aplicación administra datos identificables de alumnos. Trate la base SQLit
 
 La aplicación no sincroniza datos con un servidor. Esa operación local reduce exposición de red, pero **no sustituye** controles de acceso, respaldos ni protección física del equipo.
 
-## 6. Soporte
+## 🆘 Soporte
 
 Para incidencias de operación, contacte primero al administrador local de la Preparatoria Quince. Para fallos técnicos reproducibles, abra un [issue en GitHub](https://github.com/Leoglez10/Tae-Foto-P15/issues) e incluya:
 
@@ -684,12 +741,72 @@ Para incidencias de operación, contacte primero al administrador local de la Pr
 
 Nunca publique contraseñas, archivos Excel reales, bases SQLite ni datos de alumnos.
 
-## 7. Créditos
+## 🏷 Versionado
 
-**Crédito principal del proyecto: Leonardo Gonzalez.**
+Versionado simple `MAYOR.MENOR.PARCHE`. Actualmente **`0.1.0`**.
 
-Construido con [Tauri](https://tauri.app/), [Rust](https://www.rust-lang.org/) y [SQLite](https://www.sqlite.org/) para apoyar la operación de préstamo de equipos de TAE Foto en la Preparatoria Quince.
+- **PARCHE** (0.1.**0** → 0.1.1): correcciones de bugs, sin cambios de comportamiento.
+- **MENOR** (0.**1**.0 → 0.2.0): funciones nuevas que no rompen lo existente.
+- **MAYOR** (**0**.1.0 → 1.0.0): cambios que pueden requerir migración de datos.
 
-## 8. Licencia
+> ✅ La versión debe coincidir en `package.json`, `src-tauri/tauri.conf.json` y `src-tauri/Cargo.toml`. Hoy los tres declaran `0.1.0`.
 
-Este repositorio no incluye actualmente un archivo `LICENSE`. Por lo tanto, no debe asumirse permiso para copiar, modificar o redistribuir el código. Antes de una distribución externa o de aceptar contribuciones, defina y agregue una licencia explícita.
+> ℹ️ La release de GitHub reutiliza el tag fijo `auto`: la página del release permanece estable y los instaladores se reemplazan en cada build. El número de versión del producto no cambia solo por publicar.
+
+---
+
+## 🤝 Cómo contribuir
+
+1. Clona el repo: `git clone https://github.com/Leoglez10/Tae-Foto-P15.git`
+2. Crea una rama: `git checkout -b feat/mi-cambio`
+3. Haz commits claros (convencionales): `feat: exportar registros a Excel`
+4. Verifica que compile y pase pruebas:
+   ```powershell
+   cargo test --manifest-path .\src-tauri\Cargo.toml
+   npm run build
+   ```
+5. Abre un Pull Request explicando **qué** hiciste y **por qué**.
+
+> ⚠️ Nunca subas `prestamos.sqlite`, respaldos, Excel con datos reales ni capturas con información de alumnos. Revisa [Seguridad y privacidad](#-seguridad-y-privacidad) antes de tu primer commit.
+
+---
+
+## ⚖️ Licencia y uso
+
+Proyecto de **uso interno educativo** para la Preparatoria Quince.
+
+> [!WARNING]
+> Este repositorio **no incluye actualmente un archivo `LICENSE`**. Por lo tanto, no debe asumirse permiso para copiar, modificar o redistribuir el código. Antes de una distribución externa o de aceptar contribuciones, defina y agregue una licencia explícita.
+
+---
+
+## 🙌 Créditos
+
+<div align="center">
+
+<img src="https://github.com/Leoglez10.png" alt="Leonardo Gonzalez" width="96"/>
+
+### Diseñado y desarrollado por **Leonardo Gonzalez**
+
+[![GitHub](https://img.shields.io/badge/GitHub-%40Leoglez10-181717?logo=github)](https://github.com/Leoglez10)
+[![Issues](https://img.shields.io/badge/Reportar_bug_o_idea-2ea44f?logo=github)](https://github.com/Leoglez10/Tae-Foto-P15/issues)
+
+🏫 **Institución**: Preparatoria Quince
+
+🎯 **Propósito**: Control y trazabilidad de préstamos de equipo de TAE Foto
+
+🛠 **Stack**: [Tauri v2](https://tauri.app/) · [Rust](https://www.rust-lang.org/) · JavaScript vanilla (ESM) · [SQLite](https://www.sqlite.org/)
+
+</div>
+
+> 📬 ¿Encontraste un bug o tienes una mejora? Abre un [Issue](https://github.com/Leoglez10/Tae-Foto-P15/issues) o manda un Pull Request.
+
+---
+
+<div align="center">
+
+**¿Dudas?** [Si algo falla](#si-algo-falla) · [Respaldos y restauración](#respaldos-y-restauración) · [Problemas conocidos](#problemas-conocidos) · [Soporte](#-soporte)
+
+Hecho con 💙 para la comunidad de la **Preparatoria Quince** — *respalda siempre* 💾
+
+</div>
