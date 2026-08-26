@@ -2,7 +2,7 @@
 name = "prestamos-equipos-tauri"
 version = "0.1.0"
 description = "Aplicacion local de prestamo de equipos"
-authors = ["Codex"]
+authors = ["Leonardo Gonzalez"]
 edition = "2021"
 
 [lib]
