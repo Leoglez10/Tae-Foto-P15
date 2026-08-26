@@ -21,3 +21,7 @@ prestamos.sqlite
 
 # CodeGraph local index (machine-specific, regenerable)
 .codegraph/
+
+# Sensitive: historical school workbook with student data - never commit
+REGISTRO FOTO.xlsm
+*.xlsm

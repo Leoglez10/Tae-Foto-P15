@@ -293,7 +293,7 @@ taefoto/
 │   ├── solo_alumnos.xlsx           # Hoja ALUMNOS de ejemplo
 │   ├── solo_grupos.xlsx            # Hoja GRUPOS de ejemplo
 │   └── ambas.xlsx                  # Ambas hojas
-├── REGISTRO FOTO.xlsm              # Libro real histórico de la escuela (referencia)
+├── REGISTRO FOTO.xlsm              # Libro histórico local, NO versionado (.gitignore)
 └── .github/workflows/build-windows.yml
 ```
 
@@ -526,7 +526,7 @@ npm run dev          # = tauri dev; abre la ventana con binario debug y devtools
 
 | Área | Detalle | Impacto / mitigación |
 |---|---|---|
-| Privacidad | `REGISTRO FOTO.xlsm`, un libro histórico con datos de alumnos/eventos, está rastreado por Git | Debe eliminarse del árbol actual **y del historial Git** antes de distribuir públicamente el repositorio; esa limpieza todavía no se ha realizado ni verificado |
+| Privacidad | `REGISTRO FOTO.xlsm`, un libro histórico con datos de alumnos/eventos, estuvo rastreado por Git | Purgado del árbol actual y de todo el historial Git (`git filter-repo`) e incluido en `.gitignore`. El repositorio fue público mientras el archivo estuvo presente, así que se debe asumir que copias externas (clones, forks, cachés) pueden conservarlo |
 | Seguridad | Contraseñas de administradores en texto plano en `administradores`; admin semilla `admin/1234` | Cambiar la contraseña por defecto; migrar a hash si la app crece |
 | Seguridad | `CSP: null` en `tauri.conf.json` | Sin política de contenido; riesgo bajo en app local, pero conviene definirlo |
 | Dependencia externa | `generate_report_pdf` ejecuta `C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe` (ruta fija) | Sin wkhtmltopdf instalado, el PDF falla; el CSV y la impresión de vista previa funcionan sin él |
@@ -658,8 +658,10 @@ Mi archivo Excel está en: <PEGA_AQUÍ_LA_RUTA_DE_TU_ARCHIVO_EXCEL>
 
 Esta aplicación administra datos identificables de alumnos. Trate la base SQLite, los respaldos, los Excel y los reportes como información institucional sensible.
 
-> [!WARNING]
-> `REGISTRO FOTO.xlsm` está actualmente rastreado por Git y contiene datos históricos de alumnos/eventos. Antes de publicar o distribuir el repositorio, el propietario debe retirarlo de los archivos actuales **y reescribir el historial Git**; borrar únicamente la copia visible no elimina versiones anteriores. Esta limpieza todavía no se ha realizado ni verificado.
+> [!IMPORTANT]
+> `REGISTRO FOTO.xlsm` contiene datos históricos de alumnos/eventos y **ya fue purgado** del árbol de trabajo y de todo el historial Git con `git filter-repo`; además está listado en `.gitignore` para que no vuelva a rastrearse. El libro sigue disponible localmente para quien opere la app, pero no debe versionarse nunca.
+>
+> El repositorio estuvo público con el archivo dentro, por lo que la purga **no revierte la exposición pasada**: clones, forks y cachés externos pueden conservar una copia. Trate esos datos como ya divulgados.
 
 - Cambie `admin` / `1234` antes de capturar datos reales.
 - No comparta contraseñas entre administradores y desactive las cuentas que ya no deban entrar.
