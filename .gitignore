@@ -25,3 +25,6 @@ prestamos.sqlite
 # Sensitive: historical school workbook with student data - never commit
 REGISTRO FOTO.xlsm
 *.xlsm
+
+# Security correspondence: references sensitive SHAs, keep out of the public repo
+docs/github-support-purge-request.md
