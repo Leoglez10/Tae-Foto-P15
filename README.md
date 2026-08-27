@@ -9,7 +9,7 @@
 [![CI — Build Windows Installer](https://github.com/Leoglez10/Tae-Foto-P15/actions/workflows/build-windows.yml/badge.svg)](https://github.com/Leoglez10/Tae-Foto-P15/actions/workflows/build-windows.yml)
 [![Versión](https://img.shields.io/badge/versi%C3%B3n-0.1.0-blue)]()
 [![Plataforma](https://img.shields.io/badge/plataforma-Windows%2010%2F11-blue)]()
-[![Licencia](https://img.shields.io/badge/licencia-no%20definida-lightgrey)](#️-licencia-y-uso)
+[![Licencia](https://img.shields.io/badge/licencia-no%20definida-lightgrey)](#-licencia-y-uso)
 [![Autor](https://img.shields.io/badge/autor-Leonardo%20Gonzalez-purple)](https://github.com/Leoglez10)
 
 ![Tauri](https://img.shields.io/badge/Tauri-v2-24C8DB?logo=tauri&logoColor=white)
@@ -77,7 +77,43 @@ La app responde a 3 preguntas básicas:
 
 ---
 
+## ✨ Funciones principales
+
+- ✅ **Préstamo y devolución por código de alumno** en segundos, desde el modo ESTUDIANTE y sin contraseña.
+- ✅ **Un préstamo activo máximo por alumno y por equipo**, garantizado por índices únicos de SQLite (no por código de la app).
+- ✅ **Panel administrador** con usuario y contraseña (al instalar existe `admin`/`1234`; cámbielo).
+- ✅ **Alta, edición y baja** de alumnos, equipos y administradores, con reglas de protección (no borrar quien tiene préstamo activo; no eliminar al último admin activo).
+- ✅ **Historial completo** de préstamos y devoluciones, con búsqueda por alumno y filtro por rango de fechas.
+- ✅ **Exportación de registros a CSV**.
+- ✅ **Reportes**: préstamos por alumno, por fecha y equipos más usados, con vista previa, impresión y generación de PDF.
+- ✅ **Importación masiva desde Excel** (`.xlsx`/`.xlsm`) integrada en el panel, con plantillas incluidas en `templates/`.
+- ✅ **Respaldo y restauración** de la base de datos desde el panel, con respaldo automático antes de restaurar.
+- ✅ **100 % local y offline**: SQLite embebido, sin servidor, sin telemetría ni servicios externos.
+
+---
+
+## 🖼️ Vista rápida
+
+| Pantalla | Captura |
+|---|---|
+| Inicio (selección de rol) | _(pendiente)_ |
+| Modo estudiante (préstamo/devolución) | _(pendiente)_ |
+| Panel administrador | _(pendiente)_ |
+
+> Las capturas aún no están versionadas. Cuando se agreguen, deben evitar mostrar datos reales de alumnos (ver [Seguridad y privacidad](#-seguridad-y-privacidad)).
+
+---
+
 ## ⚡ Inicio rápido
+
+### Requisitos del sistema
+
+| Requisito | Detalle |
+|---|---|
+| Sistema operativo | Windows 10 u 11 (x64) |
+| Runtime | Microsoft Edge WebView2 (suele venir preinstalado en Windows 10/11 recientes) |
+| Conexión | **No requiere internet**: la app y los datos son 100 % locales |
+| Cuenta | Se crea el administrador inicial al primer arranque; no hay servicio en la nube |
 
 ### Instalar en Windows
 
@@ -93,20 +129,25 @@ WebView2 suele venir instalado en Windows 10 y 11. Si la aplicación no abre o m
 
 1. [¿Qué es esta app?](#-qué-es-esta-app)
 2. [¿Para quién es?](#-para-quién-es)
-3. [Inicio rápido](#-inicio-rápido)
-4. [Guía para profesores](#-guía-para-profesores)
+3. [Funciones principales](#-funciones-principales)
+4. [Vista rápida](#-vista-rápida)
+5. [Inicio rápido](#-inicio-rápido)
+   - [Requisitos del sistema](#requisitos-del-sistema)
+   - [Instalar en Windows](#instalar-en-windows)
+6. [Guía para profesores](#-guía-para-profesores)
    - [¿Qué hace la aplicación?](#qué-hace-la-aplicación)
    - [Cómo prestar un equipo](#cómo-prestar-un-equipo)
    - [Cómo registrar una devolución](#cómo-registrar-una-devolución)
    - [Si algo falla](#si-algo-falla)
-5. [Guía para administradores](#-guía-para-administradores)
+7. [Guía para administradores](#-guía-para-administradores)
    - [Acceso al panel](#acceso-al-panel)
    - [Secciones del panel](#secciones-del-panel)
    - [Alumnos, equipos y administradores](#alumnos-equipos-y-administradores)
    - [Importar usuarios desde Excel](#importar-usuarios-desde-excel)
    - [Respaldos y restauración](#respaldos-y-restauración)
    - [Dónde viven los datos](#dónde-viven-los-datos)
-6. [Mantenimiento y desarrollo](#-mantenimiento-y-desarrollo)
+8. [Preguntas frecuentes](#-preguntas-frecuentes)
+9. [Mantenimiento y desarrollo](#-mantenimiento-y-desarrollo)
    - [Stack técnico](#stack-técnico)
    - [Arquitectura de carpetas](#arquitectura-de-carpetas)
    - [Esquema de base de datos](#esquema-de-base-de-datos)
@@ -119,13 +160,13 @@ WebView2 suele venir instalado en Windows 10 y 11. Si la aplicación no abre o m
    - [Desarrollo y depuración](#desarrollo-y-depuración)
    - [Respaldo y migración del esquema](#respaldo-y-migración-del-esquema)
    - [Problemas conocidos](#problemas-conocidos)
-7. [Prompt de IA para importar usuarios](#-prompt-de-ia-para-importar-usuarios)
-8. [Seguridad y privacidad](#-seguridad-y-privacidad)
-9. [Soporte](#-soporte)
-10. [Versionado](#-versionado)
-11. [Cómo contribuir](#-cómo-contribuir)
-12. [Licencia y uso](#️-licencia-y-uso)
-13. [Créditos](#-créditos)
+10. [Prompt de IA para importar usuarios](#-prompt-de-ia-para-importar-usuarios)
+11. [Seguridad y privacidad](#-seguridad-y-privacidad)
+12. [Soporte](#-soporte)
+13. [Versionado](#-versionado)
+14. [Cómo contribuir](#-cómo-contribuir)
+15. [Licencia y uso](#-licencia-y-uso)
+16. [Créditos](#-créditos)
 
 ---
 
@@ -288,6 +329,37 @@ Todo se guarda en la carpeta de datos de la app en Windows:
 ```
 
 Ruta completa típica: `C:\Users\<SU_USUARIO>\AppData\Roaming\com.institucion.prestamosequipos\prestamos.sqlite`.
+
+---
+
+## ❓ Preguntas frecuentes
+
+**¿Necesita internet?**
+No. Todo es local: la base SQLite y los reportes se generan en la misma computadora, sin servidor ni telemetría. Solo la compilación oficial (GitHub Actions) descarga herramientas de Internet; la app ya instalada no.
+
+**¿Dónde se guardan los datos?**
+En `%APPDATA%\com.institucion.prestamosequipos\prestamos.sqlite` (ver [Dónde viven los datos](#dónde-viven-los-datos)). Ese archivo es el que debe respaldar.
+
+**¿Funciona en macOS o Linux?**
+No. El objetivo declarado es Windows x64: el build de CI usa el target `x86_64-pc-windows-msvc`, "abrir carpeta" invoca `explorer.exe` y el PDF usa una ruta fija de Windows para `wkhtmltopdf`. No hay build oficial para otras plataformas.
+
+**¿La puedo usar en varias computadoras a la vez?**
+No sincroniza. Cada computadora tiene su propia base local independiente. Para mover datos de una PC a otra: respalde en la origen (o copie `prestamos.sqlite` con la app cerrada) y use **Restaurar base** en la destino.
+
+**¿Cómo recupero mis datos si la app no abre?**
+No borre la carpeta de datos. Con la app cerrada, copie un respaldo reciente de `…\backups\` sobre `prestamos.sqlite`, o reinstale la app y use **Administrador → Importar → Restaurar base** con un archivo `.sqlite` válido.
+
+**¿Puedo tener varios administradores?**
+Sí, créelos en **Admins**. La app protege al último administrador activo: no se puede eliminar ni desactivar.
+
+**¿Las contraseñas van seguras?**
+Hoy se guardan **en texto plano**. Cambie `admin`/`1234` al instalar, limite el acceso físico al equipo y no comparta la base. Antes de distribuir la app a más usuarios, conviene migrar a hash (ver [Problemas conocidos](#problemas-conocidos)).
+
+**¿Qué pasa si borro un alumno o un equipo?**
+Se borran también sus préstamos e historial asociados. Si necesita conservar el historial, haga un respaldo antes de eliminar.
+
+**¿Puedo importar el historial antiguo del `REGISTRO FOTO.xlsm`?**
+Sí, pero por la ruta B (script PowerShell), no por el importador del panel. Ver [Importación de datos: dos rutas](#importación-de-datos-dos-rutas).
 
 ---
 
@@ -583,7 +655,7 @@ npm run dev          # = tauri dev; abre la ventana con binario debug y devtools
 
 | Área | Detalle | Impacto / mitigación |
 |---|---|---|
-| Privacidad | `REGISTRO FOTO.xlsm`, un libro histórico con datos de alumnos/eventos, estuvo rastreado por Git | Purgado del árbol actual y de todo el historial Git (`git filter-repo`) e incluido en `.gitignore`. El repositorio fue público mientras el archivo estuvo presente, así que se debe asumir que copias externas (clones, forks, cachés) pueden conservarlo |
+| Privacidad | `REGISTRO FOTO.xlsm` (y otros libros `.xlsm` locales, p. ej. `REGISTRO FOTO 2.xlsm`), con datos de alumnos/eventos, estuvieron rastreados por Git | Purgados del árbol actual y de todo el historial Git (`git filter-repo`) e incluidos en `.gitignore` vía `*.xlsm`. El repositorio fue público mientras el archivo estuvo presente, así que se debe asumir que copias externas (clones, forks, cachés) pueden conservarlo |
 | Seguridad | Contraseñas de administradores en texto plano en `administradores`; admin semilla `admin/1234` | Cambiar la contraseña por defecto; migrar a hash si la app crece |
 | Seguridad | `CSP: null` en `tauri.conf.json` | Sin política de contenido; riesgo bajo en app local, pero conviene definirlo |
 | Dependencia externa | `generate_report_pdf` ejecuta `C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe` (ruta fija) | Sin wkhtmltopdf instalado, el PDF falla; el CSV y la impresión de vista previa funcionan sin él |
@@ -676,8 +748,8 @@ CONTRATO REAL DEL IMPORTADOR (no lo modifiques, aplícalo):
 
 REGLAS PARA LA GUÍA:
 - Pídeme la ruta del archivo Excel y, si puedo, inspecciónalo o hazme
-  preguntas para confirmar: nombres EXACTOS de las hojas, encabezados de la
-  fila 1 y si hay fechas involucradas.
+  preguntas para confirmar: nombres EXACTOS de las hojas, encabezados de
+  la fila 1 y si hay fechas involucradas.
 - Decide la ruta: si el libro tiene hojas ALUMNOS/GRUPOS, usa la RUTA A;
   si tiene hojas tipo catálogo/eventos (GRUPOS/BDD/Catalogo/Eventos),
   usa la RUTA B con los parámetros correctos.
@@ -716,14 +788,14 @@ Mi archivo Excel está en: <PEGA_AQUÍ_LA_RUTA_DE_TU_ARCHIVO_EXCEL>
 Esta aplicación administra datos identificables de alumnos. Trate la base SQLite, los respaldos, los Excel y los reportes como información institucional sensible.
 
 > [!IMPORTANT]
-> `REGISTRO FOTO.xlsm` contiene datos históricos de alumnos/eventos y **ya fue purgado** del árbol de trabajo y de todo el historial Git con `git filter-repo`; además está listado en `.gitignore` para que no vuelva a rastrearse. El libro sigue disponible localmente para quien opere la app, pero no debe versionarse nunca.
+> Los libros `.xlsm` locales (p. ej. `REGISTRO FOTO.xlsm`, `REGISTRO FOTO 2.xlsm`) contienen datos históricos de alumnos/eventos y **ya fueron purgados** del árbol de trabajo y de todo el historial Git con `git filter-repo`; además el patrón `*.xlsm` está en `.gitignore` para que ninguno vuelva a rastrearse. Los libros siguen disponibles localmente para quien opere la app, pero no deben versionarse nunca.
 >
-> El repositorio estuvo público con el archivo dentro, por lo que la purga **no revierte la exposición pasada**: clones, forks y cachés externos pueden conservar una copia. Trate esos datos como ya divulgados.
+> El repositorio estuvo público con uno de esos archivos dentro, por lo que la purga **no revierte la exposición pasada**: clones, forks y cachés externos pueden conservar una copia. Trate esos datos como ya divulgados.
 
 - Cambie `admin` / `1234` antes de capturar datos reales.
 - No comparta contraseñas entre administradores y desactive las cuentas que ya no deban entrar.
 - Restrinja el acceso de Windows a `%APPDATA%\com.institucion.prestamosequipos\`.
-- No adjunte `prestamos.sqlite`, respaldos, `REGISTRO FOTO.xlsm`, CSV ni capturas con datos personales en issues públicos.
+- No adjunte `prestamos.sqlite`, respaldos, libros `.xlsm`, CSV ni capturas con datos personales en issues públicos.
 - Mantenga al menos una copia de respaldo fuera del equipo de operación y pruebe periódicamente que pueda restaurarse.
 - Antes de distribuir la app en un entorno con más usuarios o equipos, priorice el hash de contraseñas, una CSP explícita y la firma de los instaladores.
 
@@ -805,7 +877,7 @@ Proyecto de **uso interno educativo** para la Preparatoria Quince.
 
 <div align="center">
 
-**¿Dudas?** [Si algo falla](#si-algo-falla) · [Respaldos y restauración](#respaldos-y-restauración) · [Problemas conocidos](#problemas-conocidos) · [Soporte](#-soporte)
+**¿Dudas?** [Preguntas frecuentes](#-preguntas-frecuentes) · [Si algo falla](#si-algo-falla) · [Respaldos y restauración](#respaldos-y-restauración) · [Problemas conocidos](#problemas-conocidos) · [Soporte](#-soporte)
 
 Hecho con 💙 para la comunidad de la **Preparatoria Quince** — *respalda siempre* 💾
 
