@@ -1,23 +1,91 @@
 name: "Build Windows Installer"
 
 on:
-  workflow_dispatch: # Permite ejecutarlo manualmente desde GitHub
   push:
     branches:
       - main
-    paths-ignore:
-      - 'README.md'
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Solo decidir si correspondería un release; no compilar ni publicar"
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
-
+  prepare-release:
+    runs-on: ubuntu-latest
     permissions:
-      contents: write # Necesario para crear la Release y subir el archivo
-
+      contents: write
+    outputs:
+      should_release: ${{ steps.gate.outputs.should_release }}
+      release_tag: ${{ steps.gate.outputs.release_tag }}
+      previous_tag: ${{ steps.gate.outputs.previous_tag }}
+      target_sha: ${{ steps.bump.outputs.target_sha || steps.gate.outputs.target_sha }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run release gate
+        id: gate
+        shell: bash
+        env:
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          GITHUB_REF_TYPE: ${{ github.ref_type }}
+        run: |
+          bash scripts/release-gate.sh | tee release-gate.out
+          cat release-gate.out >> "$GITHUB_OUTPUT"
+
+      - name: Syntax-check frontend modules
+        if: steps.gate.outputs.should_release == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp_dir="$(mktemp -d)"
+          trap 'rm -rf "$tmp_dir"' EXIT
+          while IFS= read -r file; do
+            tmp_file="$tmp_dir/$(basename "$file" .js).mjs"
+            cp "$file" "$tmp_file"
+            node --check "$tmp_file"
+          done < <(git ls-files 'src/**/*.js' 'src/*.js')
+
+      - name: Test release gate
+        if: steps.gate.outputs.should_release == 'true'
+        shell: bash
+        run: bash scripts/test-release-gate.sh
+
+      - name: Bump release version
+        id: bump
+        if: steps.gate.outputs.should_release == 'true' && steps.gate.outputs.release_version != ''
+        shell: bash
+        run: |
+          bash scripts/ci-bump-release.sh "${{ steps.gate.outputs.release_version }}"
+          echo "target_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  build-tauri:
+    runs-on: windows-latest
+    needs: prepare-release
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-release.outputs.target_sha }}
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -26,9 +94,6 @@ jobs:
 
       - name: Install Frontend Dependencies
         run: npm install
-
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v1
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
@@ -40,21 +105,76 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
 
+      - name: Test Rust
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Check updater signing configuration
+        if: needs.prepare-release.outputs.should_release == 'true'
+        shell: pwsh
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY) -or
+              [string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD)) {
+            throw "Configure both updater signing secrets before building a release."
+          }
+
+      - name: Generate release notes
+        id: notes
+        shell: pwsh
+        env:
+          PREVIOUS_TAG: ${{ needs.prepare-release.outputs.previous_tag }}
+        run: |
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          $fallback = "Esta versión trae mejoras internas y correcciones menores."
+          $features = @()
+          $fixes = @()
+          $previous = $env:PREVIOUS_TAG
+          $range = if ([string]::IsNullOrWhiteSpace($previous)) { "HEAD" } else { "$previous..HEAD" }
+
+          foreach ($subject in @(git log --no-merges --format=%s $range)) {
+            if ($subject -match '^(?<type>feat|fix)(\([^)]*\))?!?:\s*(?<text>.+)$') {
+              $text = $Matches['text'].Trim()
+              if ($text.Length -gt 0) {
+                $text = $text.Substring(0, 1).ToUpper() + $text.Substring(1)
+                if ($Matches['type'] -eq 'feat') { $features += "- $text" } else { $fixes += "- $text" }
+              }
+            }
+          }
+
+          $sections = @()
+          if ($features.Count -gt 0) { $sections += (@("Novedades") + $features) -join "`n" }
+          if ($fixes.Count -gt 0) { $sections += (@("Correcciones") + $fixes) -join "`n" }
+          $notes = if ($sections.Count -gt 0) { $sections -join "`n`n" } else { $fallback }
+          $instructions = @"
+          Instalador de la aplicación para Windows. Descarga el archivo de abajo para instalar.
+
+          **Si Windows bloquea la instalación:**
+          1. Click derecho en el archivo → Propiedades
+          2. Abajo a la derecha, marca "Desbloquear"
+          3. Aplica los cambios
+          4. Ejecuta el instalador
+          "@
+          $body = ($notes.Trim(), $instructions.Trim()) -join "`n`n"
+          Write-Host $body
+          "body<<RELEASE_BODY_EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          $body | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "RELEASE_BODY_EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
       - name: Build Tauri App
+        if: needs.prepare-release.outputs.should_release == 'true'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: auto
-          releaseName: 'Prestamo de Equipos - Windows'
-          releaseBody: |
-            Instalador de la aplicación para Windows. Descarga el archivo de abajo para instalar.
-            
-            **Si Windows bloquea la instalación:**
-            1. Click derecho en el archivo → Propiedades
-            2. Abajo a la derecha, marca "Desbloquear"
-            3. Aplica los cambios
-            4. Ejecuta el instalador
+          tagName: v__VERSION__
+          releaseName: "Prestamo de Equipos v__VERSION__ - Windows"
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: false
+          includeUpdaterJson: true
+          updaterJsonPreferNsis: true
           args: --target x86_64-pc-windows-msvc
