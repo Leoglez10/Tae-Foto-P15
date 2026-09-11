@@ -1,5 +1,6 @@
 mod commands;
 mod db;
+mod feedback;
 mod models;
 mod services;
 
@@ -15,8 +16,25 @@ pub struct AppState {
     pub app_data_dir: PathBuf,
 }
 
+#[tauri::command]
+fn get_update_readiness() -> &'static str {
+    if !cfg!(all(target_os = "windows", target_arch = "x86_64")) {
+        "unsupported"
+    } else if cfg!(debug_assertions) {
+        "development"
+    } else {
+        "ready"
+    }
+}
+
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(desktop)]
+    let builder = builder
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init());
+
+    builder
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&app_data_dir)?;
@@ -27,12 +45,15 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            get_update_readiness,
+            feedback::reportar_problema,
             commands::operation::find_student_by_code,
             commands::operation::list_available_equipment,
             commands::operation::register_student_operation,
             commands::operation::get_student_history,
             commands::admin::admin_login,
             commands::admin::list_admins,
+            commands::admin::get_app_version,
             commands::admin::create_admin,
             commands::admin::update_admin,
             commands::admin::delete_admin,

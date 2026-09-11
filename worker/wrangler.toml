@@ -1,0 +1,16 @@
+name = "taefoto-p15-feedback"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# GITHUB_TOKEN is NOT stored here. Set it from inside worker/ with:
+#   npx wrangler secret put GITHUB_TOKEN
+
+# Native Cloudflare rate limiting binding, no KV and no obsolete [[unsafe.bindings]].
+# period accepts only 10 or 60.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 5
+  period = 60

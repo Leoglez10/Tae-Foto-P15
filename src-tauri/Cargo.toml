@@ -20,3 +20,11 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri = { version = "2.1.1", features = [] }
 thiserror = "2"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-process = "2"
+tauri-plugin-updater = "2"
+# Envío de los reportes de problemas al Worker (ver worker/README.md).
+# 0.13 y no 0.12: tauri-plugin-updater ya trae reqwest 0.13, así no se compilan
+# dos stacks de reqwest en el mismo binario. rustls evita depender de OpenSSL en Windows.
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }

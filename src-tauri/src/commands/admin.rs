@@ -15,6 +15,13 @@ pub fn admin_login(state: State<'_, AppState>, payload: AdminLoginPayload) -> Re
     services::admin::admin_login(&state.db_path, payload).map_err(|err| err.to_string())
 }
 
+/// Devuelve la version declarada en tauri.conf.json, leida del binario en ejecucion.
+/// El webview no puede obtenerla por su cuenta: la app no expone la API global de Tauri.
+#[tauri::command]
+pub fn get_app_version(app: tauri::AppHandle) -> String {
+    app.package_info().version.to_string()
+}
+
 #[tauri::command]
 pub fn list_admins(state: State<'_, AppState>) -> Result<Vec<AdminUser>, String> {
     services::admin::list_admins(&state.db_path).map_err(|err| err.to_string())
