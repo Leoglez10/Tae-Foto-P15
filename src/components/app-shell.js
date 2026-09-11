@@ -2,9 +2,6 @@ import { icon } from "../icons.js";
 import { renderOperationView } from "../views/operation-view.js";
 import { renderAdminView } from "../views/admin-view.js";
 
-function getAdminFocusSnapshot(root) {
-  const openDetails = [...root.querySelectorAll("details[id][open]")].map((node) => node.id);
-  const active = document.activeElement;
 export function escapeUpdateNoticeHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -82,6 +79,9 @@ function updateNoticeMarkup(state) {
   `;
 }
 
+function getAdminFocusSnapshot(root) {
+  const openDetails = [...root.querySelectorAll("details[id][open]")].map((node) => node.id);
+  const active = document.activeElement;
   if (!active || !root.contains(active)) {
     return { scrollY: window.scrollY, openDetails };
   }
@@ -238,7 +238,6 @@ export function createAppShell(root, store) {
     root.querySelector("[data-action='logout-admin']")?.addEventListener("click", () => {
       store.actions.logoutAdmin();
     });
-
     root.querySelectorAll("[data-update-check='true']").forEach((button) => {
       button.addEventListener("click", () => {
         void store.actions.checkForUpdates();
@@ -267,6 +266,7 @@ export function createAppShell(root, store) {
       button.addEventListener("click", () => {
         store.actions.dismissUpdateHistory();
       });
+    });
     
     root.querySelector("#main-content")?.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && state.role) {
