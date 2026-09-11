@@ -54,16 +54,26 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # No usar `node --check`: en Node 20 parsea como CommonJS y rechaza
-          # cualquier `export` aunque el archivo se llame .mjs. El parser de
-          # modulos de `vm` valida ESM en cualquier version de Node.
+          # Estos modulos usan `export` y se sirven tal cual, sin bundler, asi que hay
+          # que parsearlos como ESM. Se intentan dos caminos independientes porque el
+          # parser varia entre builds de Node; si el archivo esta realmente roto,
+          # fallan los dos.
+          tmp_dir="$(mktemp -d)"
+          trap 'rm -rf "$tmp_dir"' EXIT
+          fallidos=0
           while IFS= read -r file; do
-            node --experimental-vm-modules --no-warnings -e '
-              const fs = require("node:fs");
-              const vm = require("node:vm");
-              new vm.SourceTextModule(fs.readFileSync(process.argv[1], "utf8"), { identifier: process.argv[1] });
-            ' "$file" || { echo "Error de sintaxis en $file"; exit 1; }
+            cp "$file" "$tmp_dir/check.mjs"
+            if node --check "$tmp_dir/check.mjs" 2>/dev/null; then continue; fi
+            if node --input-type=module --check < "$file" 2>/dev/null; then continue; fi
+            echo "::error::Error de sintaxis en $file"
+            node --check "$tmp_dir/check.mjs" 2>&1 | head -5 || true
+            fallidos=$((fallidos + 1))
           done < <(git ls-files 'src/**/*.js' 'src/*.js')
+          if [ "$fallidos" -gt 0 ]; then
+            echo "$fallidos modulo(s) con error de sintaxis"
+            exit 1
+          fi
+          echo "Sintaxis OK en todos los modulos del frontend"
 
       - name: Test release gate
         if: steps.gate.outputs.should_release == 'true'
