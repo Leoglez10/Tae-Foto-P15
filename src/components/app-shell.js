@@ -5,6 +5,83 @@ import { renderAdminView } from "../views/admin-view.js";
 function getAdminFocusSnapshot(root) {
   const openDetails = [...root.querySelectorAll("details[id][open]")].map((node) => node.id);
   const active = document.activeElement;
+export function escapeUpdateNoticeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function updateProgressMarkup(updates) {
+  if (updates.status !== "downloading" && updates.status !== "installing") return "";
+  const knownTotal = Number(updates.total) > 0;
+  const received = Math.max(0, Number(updates.received) || 0);
+  const value = knownTotal ? ` value="${Math.min(received, updates.total)}"` : "";
+  const totalText = knownTotal ? ` de ${Math.round(updates.total / 1024)} KB` : " · tamaño total desconocido";
+  return `
+    <div class="update-progress" role="group" aria-label="Progreso de descarga">
+      <progress aria-label="Descarga de la actualización" max="${knownTotal ? updates.total : 1}"${value}></progress>
+      <span>${Math.round(received / 1024)} KB descargados${totalText}</span>
+    </div>
+  `;
+}
+
+function updateNoticeMarkup(state) {
+  const updates = state.updates || {};
+  const versionChange = updates.versionChange;
+  const showHistory = Boolean(versionChange);
+  const showNotice = Boolean(updates.notice || showHistory);
+  if (!showNotice) return "";
+
+  const restartOnly = updates.status === "installed" || updates.error === "restart" || updates.status === "restarting";
+  const progress = updates.status === "downloading" || updates.status === "installing";
+  const message = showHistory
+    ? `La aplicación se actualizó a la versión ${escapeUpdateNoticeHtml(versionChange.current)}.`
+    : updates.error === "check"
+      ? "No se pudo buscar la actualización. Revisa la conexión e inténtalo de nuevo."
+      : updates.error === "install"
+        ? "No se pudo descargar, verificar o instalar la actualización. Puedes volver a intentarlo."
+        : updates.error === "restart"
+          ? "La actualización ya se instaló, pero no se pudo reiniciar. Cierra y abre la aplicación o reintenta el reinicio."
+          : updates.status === "downloading"
+            ? "Descargando actualización. La aplicación se cerrará al terminar. No inicies nuevas operaciones."
+            : updates.status === "installing"
+              ? "Verificando e instalando. Windows cerrará la aplicación para ejecutar el instalador."
+              : restartOnly
+                ? "Actualización instalada. Cierra y abre la aplicación para usar la nueva versión."
+                : updates.status === "confirming"
+                  ? "Esperando tu confirmación. Todavía no se inició una nueva operación."
+                  : `Versión ${escapeUpdateNoticeHtml(updates.version || "nueva")} disponible. No se descarga nada hasta que confirmes.`;
+  const notes = showHistory ? versionChange.notes : updates.notes;
+  const notesMarkup = notes && !progress && !restartOnly
+    ? `<details id="update-notice-notes"><summary>Notas de la versión</summary><pre>${escapeUpdateNoticeHtml(notes)}</pre></details>`
+    : "";
+  const actionMarkup = showHistory
+    ? `<button class="ghost-btn" type="button" data-update-dismiss-history="true">Entendido</button>`
+    : updates.error === "check"
+      ? `<button class="btn-secondary" type="button" data-update-check="true">Reintentar búsqueda</button>`
+      : restartOnly
+        ? `<button class="btn-secondary" type="button" data-update-restart="true" ${progress ? "disabled" : ""}>Reiniciar aplicación</button>`
+        : `
+          <button class="btn-secondary" type="button" data-update-install="true" ${progress || updates.status === "confirming" ? "disabled" : ""}>${updates.error === "install" ? "Reintentar actualización" : "Actualizar ahora"}</button>
+          <button class="ghost-btn" type="button" data-update-defer="true" ${progress || updates.status === "confirming" ? "disabled" : ""}>Más tarde</button>
+        `;
+
+  return `
+    <aside class="status-banner warn" role="status" aria-live="polite" aria-label="Actualizaciones de la aplicación">
+      <div>
+        <strong>${showHistory ? "Actualización completada" : "Actualización disponible"}</strong>
+        <p>${message}</p>
+        ${notesMarkup}
+        ${updateProgressMarkup(updates)}
+      </div>
+      <div class="hero-actions">${actionMarkup}</div>
+    </aside>
+  `;
+}
+
   if (!active || !root.contains(active)) {
     return { scrollY: window.scrollY, openDetails };
   }
@@ -82,6 +159,7 @@ export function createAppShell(root, store) {
         <div class="ambient-orb orb-a"></div>
         <div class="ambient-orb orb-b"></div>
         <div class="ambient-grid"></div>
+        ${updateNoticeMarkup(state)}
         <header class="topbar" role="banner">
           <div class="brand-lockup">
             <div class="logo-placeholder">
@@ -160,6 +238,35 @@ export function createAppShell(root, store) {
     root.querySelector("[data-action='logout-admin']")?.addEventListener("click", () => {
       store.actions.logoutAdmin();
     });
+
+    root.querySelectorAll("[data-update-check='true']").forEach((button) => {
+      button.addEventListener("click", () => {
+        void store.actions.checkForUpdates();
+      });
+    });
+
+    root.querySelectorAll("[data-update-install='true']").forEach((button) => {
+      button.addEventListener("click", () => {
+        void store.actions.consentAndInstall();
+      });
+    });
+
+    root.querySelectorAll("[data-update-defer='true']").forEach((button) => {
+      button.addEventListener("click", () => {
+        store.actions.deferUpdate();
+      });
+    });
+
+    root.querySelectorAll("[data-update-restart='true']").forEach((button) => {
+      button.addEventListener("click", () => {
+        void store.actions.restartOnly();
+      });
+    });
+
+    root.querySelectorAll("[data-update-dismiss-history='true']").forEach((button) => {
+      button.addEventListener("click", () => {
+        store.actions.dismissUpdateHistory();
+      });
     
     root.querySelector("#main-content")?.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && state.role) {

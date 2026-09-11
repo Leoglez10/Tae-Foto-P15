@@ -1,3 +1,9 @@
+import { validarReporte } from "../reports/reporteProblema.js";
+import { createUpdateController } from "../updates/updateController.js";
+import { notePendingUpdate, resolveVersionChange } from "../updates/updateHistory.js";
+
+const CHANNEL_IPC_KEY = "__TAURI_TO_IPC_KEY__";
+
 const invoke =
   window.__TAURI_INTERNALS__?.invoke ||
   window.__TAURI__?.core?.invoke ||
@@ -18,6 +24,96 @@ function messageFromError(error) {
   return "Ocurrió un error inesperado";
 }
 
+function isDesktopRuntime() {
+  return Boolean(
+    window.__TAURI_INTERNALS__?.invoke ||
+      window.__TAURI__?.core?.invoke ||
+      window.__TAURI__?.invoke
+  );
+}
+
+class TauriChannel {
+  constructor(onmessage) {
+    this.index = 0;
+    this.pending = [];
+    this.end = undefined;
+    this.onmessage = onmessage || (() => {});
+    this.id = window.__TAURI_INTERNALS__.transformCallback((event) => {
+      const eventIndex = event.index;
+      if ("end" in event) {
+        if (eventIndex === this.index) this.cleanupCallback();
+        else this.end = eventIndex;
+        return;
+      }
+      const message = event.message;
+      if (eventIndex === this.index) {
+        this.onmessage(message);
+        this.index += 1;
+        while (this.index in this.pending) {
+          const pendingMessage = this.pending[this.index];
+          this.onmessage(pendingMessage);
+          delete this.pending[this.index];
+          this.index += 1;
+        }
+        if (this.index === this.end) this.cleanupCallback();
+      } else {
+        this.pending[eventIndex] = message;
+      }
+    });
+  }
+
+  cleanupCallback() {
+    window.__TAURI_INTERNALS__.unregisterCallback(this.id);
+  }
+
+  [CHANNEL_IPC_KEY]() {
+    return `__CHANNEL__:${this.id}`;
+  }
+
+  toJSON() {
+    return this[CHANNEL_IPC_KEY]();
+  }
+}
+
+function createResource(raw) {
+  if (!raw) return null;
+  return {
+    version: raw.version,
+    body: raw.body,
+    async downloadAndInstall(onEvent) {
+      const channel = new TauriChannel(onEvent);
+      await invoke("plugin:updater|download_and_install", { onEvent: channel, rid: raw.rid });
+    },
+    async close() {
+      await invoke("plugin:resources|close", { rid: raw.rid });
+    }
+  };
+}
+
+function createUpdateDependencies() {
+  return {
+    isDesktop: isDesktopRuntime,
+    readiness: () => invoke("get_update_readiness"),
+    async check() {
+      if (window.__TAURI__?.updater?.check) return window.__TAURI__.updater.check();
+      return createResource(await invoke("plugin:updater|check"));
+    },
+    async relaunch() {
+      if (window.__TAURI__?.process?.relaunch) return window.__TAURI__.process.relaunch();
+      return invoke("plugin:process|restart");
+    },
+    onInstallConsent(version, notes) {
+      notePendingUpdate(undefined, version, notes);
+    }
+  };
+}
+
+function confirmUpdateExit() {
+  return window.confirm(
+    "La aplicación se cerrará para instalar la actualización. Guarda tu trabajo y termina los préstamos o formularios abiertos antes de continuar. ¿Quieres actualizar ahora?"
+  );
+}
+
 function cleanAdminAccessState() {
   return {
     adminAuthenticated: false,
@@ -29,6 +125,17 @@ function cleanAdminAccessState() {
 
 const initialState = {
   loading: false,
+  appVersion: "",
+  updates: {
+    status: "idle",
+    version: undefined,
+    notes: undefined,
+    received: 0,
+    total: undefined,
+    notice: false,
+    error: undefined,
+    versionChange: null
+  },
   flash: null,
   role: null,
   adminAuthenticated: false,
@@ -53,6 +160,14 @@ const initialState = {
   backups: {
     directory: "",
     items: []
+  },
+  problemReport: {
+    tipo: "bug",
+    titulo: "",
+    descripcion: "",
+    sending: false,
+    error: "",
+    success: ""
   },
   adminFilters: {
     studentsQuery: "",
@@ -81,6 +196,20 @@ export function createStore() {
     listeners.forEach((listener) => listener(cloneState(state)));
   };
 
+  const updateController = createUpdateController(createUpdateDependencies());
+  let updatesAttached = false;
+  let updateDetach = null;
+  let versionChangeResolved = false;
+  updateController.subscribe(() => {
+    setState({ updates: { ...state.updates, ...updateController.getSnapshot() } });
+  });
+
+  const attachUpdates = () => {
+    if (updatesAttached) return;
+    updatesAttached = true;
+    updateDetach = updateController.attach();
+  };
+
   const actions = {
     subscribe(listener) {
       listeners.add(listener);
@@ -91,15 +220,19 @@ export function createStore() {
     async bootstrap() {
       setState({ loading: true });
       try {
-        const [dashboard, availableEquipment, students, equipment, admins, records, backups] = await Promise.all([
+        const [dashboard, availableEquipment, students, equipment, admins, records, backups, appVersion] = await Promise.all([
           invoke("get_dashboard_summary"),
           invoke("list_available_equipment"),
           invoke("list_students", { query: null }),
           invoke("list_equipment", { query: null }),
           invoke("list_admins"),
           invoke("list_records", { filters: null }),
-          invoke("list_backups")
+          invoke("list_backups"),
+          invoke("get_app_version")
         ]);
+
+        const versionChange = versionChangeResolved ? state.updates.versionChange : resolveVersionChange(undefined, appVersion);
+        versionChangeResolved = true;
 
         setState({
           loading: false,
@@ -109,8 +242,11 @@ export function createStore() {
           equipment,
           admins,
           records,
-          backups
+          backups,
+          appVersion,
+          updates: { ...state.updates, versionChange }
         });
+        attachUpdates();
       } catch (error) {
         setState({
           loading: false,
@@ -313,6 +449,49 @@ export function createStore() {
       }
     },
 
+    async submitProblemReport(payload) {
+      const draft = {
+        tipo: String(payload?.tipo || ""),
+        titulo: String(payload?.titulo || ""),
+        descripcion: String(payload?.descripcion || "")
+      };
+      const validationError = validarReporte(draft);
+      if (validationError) {
+        setState({
+          problemReport: { ...state.problemReport, ...draft, sending: false, error: validationError, success: "" }
+        });
+        return;
+      }
+
+      setState({
+        problemReport: { ...state.problemReport, ...draft, sending: true, error: "", success: "" }
+      });
+
+      try {
+        await invoke("reportar_problema", draft);
+        setState({
+          problemReport: {
+            tipo: "bug",
+            titulo: "",
+            descripcion: "",
+            sending: false,
+            error: "",
+            success: "Gracias, el reporte se envió."
+          }
+        });
+      } catch (error) {
+        setState({
+          problemReport: {
+            ...state.problemReport,
+            ...draft,
+            sending: false,
+            error: messageFromError(error) || "No se pudo enviar el reporte. Inténtalo más tarde.",
+            success: ""
+          }
+        });
+      }
+    },
+
     async createStudent(payload) {
       try {
         await invoke("create_student", { payload });
@@ -509,6 +688,26 @@ export function createStore() {
 
     setAdminSection(adminSection) {
       setState({ adminSection, flash: null });
+    },
+
+    async checkForUpdates() {
+      await updateController.check(true);
+    },
+
+    async consentAndInstall() {
+      await updateController.install(confirmUpdateExit);
+    },
+
+    deferUpdate() {
+      updateController.defer();
+    },
+
+    async restartOnly() {
+      await updateController.restart(confirmUpdateExit);
+    },
+
+    dismissUpdateHistory() {
+      setState({ updates: { ...state.updates, versionChange: null } });
     },
 
     clearFlash() {

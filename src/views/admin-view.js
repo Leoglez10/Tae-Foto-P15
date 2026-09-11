@@ -1,4 +1,17 @@
 import { icon } from "../icons.js";
+import { DESCRIPCION_MAX, TITULO_MAX } from "../reports/reporteProblema.js";
+import { isUpdateBusy } from "../updates/updateController.js";
+
+// Los valores que vienen de la base o del disco se escapan antes de entrar al HTML:
+// la CSP esta deshabilitada, asi que un nombre de archivo con marcado podria inyectar.
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 const ADMIN_SECTIONS = [
   { id: "dashboard", icon: "chart", label: "Resumen", desc: "Resumen general del sistema", group: "Principal" },
@@ -6,8 +19,9 @@ const ADMIN_SECTIONS = [
   { id: "students", icon: "users", label: "Alumnos", desc: "Altas y edición de alumnos", group: "Organización" },
   { id: "equipment", icon: "package", label: "Equipos", desc: "Inventario de equipo", group: "Organización" },
   { id: "reports", icon: "file", label: "Reportes", desc: "Vista previa y PDF", group: "Análisis" },
-  { id: "import", icon: "in", label: "Importar", desc: "Excel y respaldos", group: "Sistema" },
-  { id: "admins", icon: "user", label: "Admins", desc: "Cuentas del panel", group: "Sistema" }
+  { id: "import", icon: "in", label: "Importar", desc: "Excel de alumnos y grupos", group: "Sistema" },
+  { id: "admins", icon: "user", label: "Admins", desc: "Cuentas del panel", group: "Sistema" },
+  { id: "settings", icon: "settings", label: "Configuración", desc: "Respaldos y estado del sistema", group: "Sistema" }
 ];
 
 const QUICK_ACTIONS = ["import", "students", "equipment", "reports", "records"];
@@ -578,22 +592,6 @@ function attachTableSorting(root) {
 }
 
 function importSection(state) {
-  const backupRows =
-    state.backups?.items?.length
-      ? state.backups.items
-          .map(
-            (item) => `
-              <tr>
-                <td>${icon("file")} ${item.file_name}</td>
-                <td>${icon("calendar")} ${item.modified_at}</td>
-                <td>${icon("save")} ${Math.max(1, Math.round(item.size_bytes / 1024))} KB</td>
-                <td><button class="ghost-btn" type="button" data-open-backup="${item.path}">${icon("folder")} Abrir</button></td>
-              </tr>
-            `
-          )
-          .join("")
-      : `<tr><td colspan="4">${icon("empty")} Sin respaldos todavía.</td></tr>`;
-
   const summary = state.importSummary
     ? `
       <div class="import-summary">
@@ -663,11 +661,6 @@ function importSection(state) {
               <input id="excel-file" type="file" accept=".xlsx,.xlsm" />
               <span class="btn">${icon("chart")} Seleccionar Excel</span>
             </label>
-            <button class="btn-secondary" type="button" data-backup-database="true">${icon("save")} Respaldar base</button>
-            <label class="file-picker">
-              <input id="database-file" type="file" accept=".sqlite,.db" />
-              <span class="ghost-btn">${icon("refresh")} Restaurar base</span>
-            </label>
           </div>
         </div>
         ${summary}
@@ -688,24 +681,7 @@ function importSection(state) {
             <li>${icon("file")} La hoja <strong>GRUPOS</strong> debe tener: <strong>Grupo</strong>, <strong>Turno</strong> y <strong>Ciclo escolar</strong>. El turno debe ser <strong>MAT</strong> o <strong>VES</strong>.</li>
             <li>${icon("clipboard")} Tambien se acepta el formato legado con <strong>GRUPOS</strong> y <strong>REGISTRO</strong>.</li>
             <li>${icon("refresh")} Si el codigo del alumno ya existe, se actualiza; si no, se crea. Si el grupo ya existe por grupo, turno y ciclo, se actualiza; si no, se crea.</li>
-            <li>${icon("save")} <strong>Respaldar base</strong> crea una copia completa de la base actual en la carpeta de respaldos de la app.</li>
-            <li>${icon("refresh")} <strong>Restaurar base</strong> reemplaza la base actual por un archivo <strong>.sqlite</strong> o <strong>.db</strong> válido y genera un respaldo automático antes.</li>
           </ul>
-        </article>
-        <article class="panel">
-          <div class="section-head">
-            <div>
-              <h3>${icon("folder")} Historial de respaldos</h3>
-              <p class="muted">${icon("folder")} Carpeta: ${state.backups?.directory || "No disponible"}</p>
-            </div>
-            <button class="ghost-btn" type="button" data-open-backups-folder="${state.backups?.directory || ""}">${icon("folder")} Abrir carpeta</button>
-          </div>
-          <div class="table-wrap compact-table">
-            <table>
-              <thead><tr><th>Archivo</th><th>Fecha</th><th>Tamaño</th><th>Acción</th></tr></thead>
-              <tbody>${backupRows}</tbody>
-            </table>
-          </div>
         </article>
         <article class="panel">
           <div class="panel-header-icon">
@@ -1021,10 +997,212 @@ function reportsSection(state) {
   `;
 }
 
+function updateProgressMarkup(updates) {
+  if (updates.status !== "downloading" && updates.status !== "installing") return "";
+  const knownTotal = Number(updates.total) > 0;
+  const received = Math.max(0, Number(updates.received) || 0);
+  const totalText = knownTotal ? ` de ${Math.round(updates.total / 1024)} KB` : " · tamaño total desconocido";
+  return `
+    <div class="update-progress" role="group" aria-label="Progreso de descarga">
+      <progress aria-label="Descarga de la actualización" max="${knownTotal ? updates.total : 1}" ${knownTotal ? `value="${Math.min(received, updates.total)}"` : ""}></progress>
+      <span>${Math.round(received / 1024)} KB descargados${totalText}</span>
+    </div>
+  `;
+}
+
+function updatesSettingsBlock(state) {
+  const updates = state.updates || {};
+  const unavailable = ["browser", "unsupported", "development"].includes(updates.status);
+  const busy = isUpdateBusy(updates);
+  const installed = updates.status === "installed" || updates.error === "restart";
+  const canInstall = updates.version && !busy && !installed && updates.status !== "deferred";
+  const statusText = updates.status === "browser"
+    ? "La vista del navegador no puede actualizar la aplicación de escritorio."
+    : updates.status === "unsupported"
+      ? "Por ahora solo se publican actualizaciones para Windows x64. Esta plataforma no está disponible."
+      : updates.status === "development"
+        ? "Las actualizaciones están deshabilitadas en compilaciones de desarrollo."
+        : updates.status === "checking"
+          ? "Buscando actualizaciones…"
+          : updates.status === "current"
+            ? "No hay una versión más reciente disponible."
+            : updates.error === "check"
+              ? "No se pudo consultar el servidor. Revisa la conexión e inténtalo cuando tengas acceso a Internet."
+              : installed
+                ? "La actualización está instalada. Cierra y abre la aplicación; no hace falta volver a instalar."
+                : updates.status === "deferred"
+                  ? `Versión ${escapeHtml(updates.version)} disponible. La pospusiste por esta sesión; busca manualmente para volver a verla.`
+                  : updates.version
+                    ? `Versión ${escapeHtml(updates.version)} disponible. Revisa las notas y confirma solo cuando tu trabajo esté guardado.`
+                    : "La aplicación busca actualizaciones al abrirse y cada 6 horas mientras permanece abierta.";
+  const notesMarkup = updates.notes && updates.version
+    ? `<details id="update-settings-notes"><summary>Notas de la versión</summary><pre>${escapeHtml(updates.notes)}</pre></details>`
+    : "";
+  const installButton = installed
+    ? `<button class="btn-secondary" type="button" data-update-restart="true" ${busy ? "disabled" : ""}>Reiniciar aplicación</button>`
+    : `<button class="btn-secondary" type="button" data-update-install="true" ${canInstall ? "" : "disabled"}>Actualizar ahora</button>`;
+  const deferButton = updates.version && !installed
+    ? `<button class="ghost-btn" type="button" data-update-defer="true" ${busy ? "disabled" : ""}>Más tarde</button>`
+    : "";
+
+  return `
+    <article class="panel">
+      <div class="section-head">
+        <div>
+          <h3>${icon("refresh")} Actualizaciones</h3>
+          <p class="muted">Versión instalada: <strong>${escapeHtml(state.appVersion || "sin datos")}</strong></p>
+        </div>
+        <div class="hero-actions">
+          <button class="ghost-btn" type="button" data-update-check="true" ${unavailable || busy || installed ? "disabled" : ""}>${updates.status === "checking" ? "Buscando…" : "Buscar actualizaciones"}</button>
+        </div>
+      </div>
+      <p role="status">${statusText}</p>
+      <p>Buscar no descarga ni instala nada. Windows cerrará la aplicación solo después de tu confirmación y la descarga; guarda tu trabajo antes de actualizar.</p>
+      ${notesMarkup}
+      ${updateProgressMarkup(updates)}
+      <div class="hero-actions">
+        ${installButton}
+        ${deferButton}
+      </div>
+    </article>
+  `;
+}
+
+function problemReportBlock(state) {
+  const report = state.problemReport || {};
+  const tipo = report.tipo === "sugerencia" ? "sugerencia" : "bug";
+  const titulo = escapeHtml(report.titulo || "");
+  const descripcion = escapeHtml(report.descripcion || "");
+  const sending = Boolean(report.sending);
+  const success = report.success
+    ? `<p class="report-feedback success" role="status">${escapeHtml(report.success)}</p>`
+    : "";
+  const error = report.error
+    ? `<p class="report-feedback danger" role="alert">${escapeHtml(report.error)}</p>`
+    : "";
+
+  return `
+    <article class="panel problem-report-panel" aria-labelledby="problem-report-title">
+      <div class="section-head">
+        <div>
+          <h3 id="problem-report-title">${icon("alert")} Reportar un problema</h3>
+          <p class="muted">Cuéntanos si algo falló o si tienes una sugerencia para mejorar la app.</p>
+        </div>
+        <a href="https://github.com/Leoglez10/Tae-Foto-P15/issues" target="_blank" rel="noopener noreferrer">Ver reportes en GitHub</a>
+      </div>
+      <p>Se envían automáticamente la versión instalada y el sistema operativo. No se envían datos de alumnos, préstamos ni PINs.</p>
+      <form id="problem-report-form" class="problem-report-form" aria-label="Formulario para reportar un problema">
+        <label for="problem-report-type">
+          ¿Qué quieres contarnos?
+          <select id="problem-report-type" name="tipo" ${sending ? "disabled" : ""}>
+            <option value="bug" ${tipo === "bug" ? "selected" : ""}>Un problema</option>
+            <option value="sugerencia" ${tipo === "sugerencia" ? "selected" : ""}>Una sugerencia</option>
+          </select>
+          <span class="muted">Elige si es un problema o una sugerencia.</span>
+        </label>
+        <label for="problem-report-title-input">
+          Título
+          <input id="problem-report-title-input" name="titulo" maxlength="${TITULO_MAX}" value="${titulo}" placeholder="Escribe un título corto que resuma el problema." ${sending ? "disabled" : ""} />
+        </label>
+        <label for="problem-report-description">
+          Descripción
+          <textarea id="problem-report-description" name="descripcion" maxlength="${DESCRIPCION_MAX}" rows="6" placeholder="Cuenta qué estabas haciendo, qué esperabas que pasara y qué pasó en su lugar." ${sending ? "disabled" : ""}>${descripcion}</textarea>
+        </label>
+        ${success}
+        ${error}
+        <div class="hero-actions">
+          <button class="btn" type="submit" ${sending ? "disabled" : ""}>${sending ? "Enviando…" : "Enviar reporte"}</button>
+        </div>
+      </form>
+    </article>
+  `;
+}
+
+function settingsSection(state) {
+  const directory = state.backups?.directory || "";
+  const items = state.backups?.items || [];
+
+  const backupRows = items.length
+    ? items
+        .map(
+          (item) => `
+            <tr>
+              <td>${icon("file")} ${escapeHtml(item.file_name)}</td>
+              <td>${icon("calendar")} ${escapeHtml(item.modified_at)}</td>
+              <td>${icon("save")} ${Math.max(1, Math.round(item.size_bytes / 1024))} KB</td>
+              <td><button class="ghost-btn" type="button" data-open-backup="${escapeHtml(item.path)}">${icon("folder")} Abrir</button></td>
+            </tr>
+          `
+        )
+        .join("")
+    : `<tr><td colspan="4">${icon("empty")} Sin respaldos todavía.</td></tr>`;
+
+  return `
+    <div class="admin-stack">
+      <article class="panel">
+        <div class="panel-header-icon">
+          <div class="icon-circle">${icon("settings")} </div>
+          <div>
+            <h3>Información del sistema</h3>
+            <p>Versión instalada y ubicaciones de esta computadora.</p>
+          </div>
+        </div>
+        <ul class="spec-list">
+          <li>${icon("settings")} Versión de la app: <strong>${escapeHtml(state.appVersion || "sin datos")}</strong></li>
+          <li>${icon("folder")} Carpeta de respaldos: <strong>${escapeHtml(directory || "No disponible")}</strong></li>
+          <li>${icon("save")} Respaldos guardados: <strong>${items.length}</strong></li>
+        </ul>
+      </article>
+
+      ${updatesSettingsBlock(state)}
+
+      ${problemReportBlock(state)}
+
+      <article class="panel">
+        <div class="section-head">
+          <div>
+            <h3>${icon("save")} Respaldos de la base</h3>
+            <p class="muted">Una copia completa de la base, para volver atrás si algo sale mal.</p>
+          </div>
+          <div class="hero-actions">
+            <button class="btn-secondary" type="button" data-backup-database="true">${icon("save")} Respaldar base</button>
+            <label class="file-picker">
+              <input id="database-file" type="file" accept=".sqlite,.db" />
+              <span class="ghost-btn">${icon("refresh")} Restaurar base</span>
+            </label>
+          </div>
+        </div>
+        <ul class="spec-list">
+          <li>${icon("save")} <strong>Respaldar base</strong> crea una copia completa de la base actual en la carpeta de respaldos de la app.</li>
+          <li>${icon("refresh")} <strong>Restaurar base</strong> reemplaza la base actual por un archivo <strong>.sqlite</strong> o <strong>.db</strong> válido y genera un respaldo automático antes.</li>
+        </ul>
+      </article>
+
+      <article class="panel">
+        <div class="section-head">
+          <div>
+            <h3>${icon("folder")} Historial de respaldos</h3>
+            <p class="muted">${icon("folder")} Carpeta: ${escapeHtml(directory || "No disponible")}</p>
+          </div>
+          <button class="ghost-btn" type="button" data-open-backups-folder="${escapeHtml(directory)}">${icon("folder")} Abrir carpeta</button>
+        </div>
+        <div class="table-wrap compact-table">
+          <table>
+            <thead><tr><th>Archivo</th><th>Fecha</th><th>Tamaño</th><th>Acción</th></tr></thead>
+            <tbody>${backupRows}</tbody>
+          </table>
+        </div>
+      </article>
+    </div>
+  `;
+}
+
 function currentSection(state) {
   switch (state.adminSection) {
     case "import":
       return importSection(state);
+    case "settings":
+      return settingsSection(state);
     case "students":
       return studentsSection(state);
     case "equipment":
@@ -1134,6 +1312,16 @@ export function renderAdminView(root, store) {
       await store.actions.restoreDatabase(file);
     }
     event.currentTarget.value = "";
+  });
+
+  root.querySelector("#problem-report-form")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    await store.actions.submitProblemReport({
+      tipo: String(data.get("tipo") || ""),
+      titulo: String(data.get("titulo") || ""),
+      descripcion: String(data.get("descripcion") || "")
+    });
   });
 
   root.querySelector("#student-create-form")?.addEventListener("submit", async (event) => {

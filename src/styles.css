@@ -2904,3 +2904,40 @@ kbd {
 @media (prefers-reduced-motion: reduce) {
   .status-banner { animation-duration: 0.01s; }
 }
+
+.problem-report-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.problem-report-form {
+  display: grid;
+  gap: 14px;
+}
+
+.problem-report-form label {
+  display: grid;
+  gap: 7px;
+}
+
+.problem-report-form textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.report-feedback {
+  border-radius: 14px;
+  font-weight: 700;
+  margin: 0;
+  padding: 12px 14px;
+}
+
+.report-feedback.success {
+  background: rgba(78, 127, 106, 0.14);
+  color: #2f604e;
+}
+
+.report-feedback.danger {
+  background: rgba(179, 66, 66, 0.12);
+  color: #9d3030;
+}
