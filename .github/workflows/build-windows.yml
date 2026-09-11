@@ -108,6 +108,12 @@ jobs:
       - name: Install Frontend Dependencies
         run: npm install
 
+      # tauri-action detecta el gestor de paquetes por el lockfile: este repo
+      # tiene bun.lock, asi que construye con `bun tauri build` y necesita bun
+      # instalado aunque el workflow no lo invoque directamente.
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
         with:
