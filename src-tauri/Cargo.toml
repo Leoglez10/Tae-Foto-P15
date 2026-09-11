@@ -1,6 +1,6 @@
 [package]
 name = "prestamos-equipos-tauri"
-version = "0.1.1"
+version = "0.1.2"
 description = "Aplicacion local de prestamo de equipos"
 authors = ["Leonardo Gonzalez"]
 edition = "2021"
