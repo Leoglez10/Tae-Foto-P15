@@ -54,12 +54,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tmp_dir="$(mktemp -d)"
-          trap 'rm -rf "$tmp_dir"' EXIT
+          # No usar `node --check`: en Node 20 parsea como CommonJS y rechaza
+          # cualquier `export` aunque el archivo se llame .mjs. El parser de
+          # modulos de `vm` valida ESM en cualquier version de Node.
           while IFS= read -r file; do
-            tmp_file="$tmp_dir/$(basename "$file" .js).mjs"
-            cp "$file" "$tmp_file"
-            node --check "$tmp_file"
+            node --experimental-vm-modules --no-warnings -e '
+              const fs = require("node:fs");
+              const vm = require("node:vm");
+              new vm.SourceTextModule(fs.readFileSync(process.argv[1], "utf8"), { identifier: process.argv[1] });
+            ' "$file" || { echo "Error de sintaxis en $file"; exit 1; }
           done < <(git ls-files 'src/**/*.js' 'src/*.js')
 
       - name: Test release gate
