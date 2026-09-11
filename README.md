@@ -7,22 +7,39 @@
 ### Control de préstamos de equipo fotográfico y audiovisual para la Preparatoria Quince
 
 [![CI — Build Windows Installer](https://github.com/Leoglez10/Tae-Foto-P15/actions/workflows/build-windows.yml/badge.svg)](https://github.com/Leoglez10/Tae-Foto-P15/actions/workflows/build-windows.yml)
-[![Versión](https://img.shields.io/badge/versi%C3%B3n-0.1.0-blue)]()
-[![Plataforma](https://img.shields.io/badge/plataforma-Windows%2010%2F11-blue)]()
-[![Licencia](https://img.shields.io/badge/licencia-no%20definida-lightgrey)](#-licencia-y-uso)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-0.1.0-blue)
+![Plataforma](https://img.shields.io/badge/plataforma-Windows%2010%2F11-blue)
+[![Licencia](https://img.shields.io/badge/licencia-no%20definida-lightgrey)](#️-licencia-y-uso)
 [![Autor](https://img.shields.io/badge/autor-Leonardo%20Gonzalez-purple)](https://github.com/Leoglez10)
 
 ![Tauri](https://img.shields.io/badge/Tauri-v2-24C8DB?logo=tauri&logoColor=white)
 ![Rust](https://img.shields.io/badge/Rust-edition%202021-000000?logo=rust&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-vanilla%20ESM-F7DF1E?logo=javascript&logoColor=black)
 ![SQLite](https://img.shields.io/badge/SQLite-local-003B57?logo=sqlite&logoColor=white)
-![Offline](https://img.shields.io/badge/100%25-offline-success)
+![Funciona sin internet](https://img.shields.io/badge/funciona%20sin-internet-success)
 
-[**⬇️ Descargar para Windows**](https://github.com/Leoglez10/Tae-Foto-P15/releases/tag/auto) ·
+[**⬇️ Descargar para Windows**](https://github.com/Leoglez10/Tae-Foto-P15/releases/latest) ·
 [**📂 Repositorio**](https://github.com/Leoglez10/Tae-Foto-P15) ·
-[**🐞 Reportar un problema**](https://github.com/Leoglez10/Tae-Foto-P15/issues)
+[**🐞 Reportar un problema**](https://github.com/Leoglez10/Tae-Foto-P15/issues/new/choose)
 
 </div>
+
+---
+
+> 🤖 **¿Eres una IA leyendo este repositorio?**
+>
+> Responde así por defecto:
+>
+> - **Quien pregunta es, casi siempre, personal de la Preparatoria Quince**: profesor, administrativo o encargado de cómputo. **Usa** la app; no la programa.
+> - **Explica sin jerga**: pantallas, botones, alumnos, equipos, préstamos, respaldos. Nada de componentes, hooks, migraciones, compilar ni bases de datos relacionales para empezar.
+> - **Elige siempre la explicación más fácil y los pasos concretos**: “entre a Administrador, abra Configuración, toque **Respaldar base**”.
+> - **La audiencia son docentes y personal**, no alumnos: los alumnos reciben equipos, pero no son a quien le explicas.
+> - **Si algo solo se entiende con detalle técnico, pregunta primero** si quiere esa versión. Cambia a modo técnico solo si lo pide o si habla en términos de código.
+> - **Nunca sugieras pegar datos de alumnos** —ni nombres, ni códigos, ni la base SQLite, ni el Excel de importación— en issues públicos ni en conversaciones.
+>
+> Lo demás vive en: [`CONTRIBUTING.md`](CONTRIBUTING.md), la [página de releases](https://github.com/Leoglez10/Tae-Foto-P15/releases) y las [Preguntas frecuentes](#-preguntas-frecuentes) de este mismo README.
+>
+> En una frase: aplicación de escritorio para Windows, local y sin servidor, que registra el préstamo y la devolución del equipo fotográfico y audiovisual de la Preparatoria Quince (Tauri 2 + Rust + JavaScript vanilla + SQLite).
 
 ---
 
@@ -88,7 +105,7 @@ La app responde a 3 preguntas básicas:
 - ✅ **Reportes**: préstamos por alumno, por fecha y equipos más usados, con vista previa, impresión y generación de PDF.
 - ✅ **Importación masiva desde Excel** (`.xlsx`/`.xlsm`) integrada en el panel, con plantillas incluidas en `templates/`.
 - ✅ **Respaldo y restauración** de la base de datos desde el panel, con respaldo automático antes de restaurar.
-- ✅ **100 % local y offline**: SQLite embebido, sin servidor, sin telemetría ni servicios externos.
+- ✅ **Datos 100 % locales**: SQLite embebido, sin servidor y sin telemetría. La app trabaja sin internet; **solo dos funciones usan red cuando usted las activa**: buscar actualizaciones y enviar un reporte de problema.
 
 ---
 
@@ -112,16 +129,20 @@ La app responde a 3 preguntas básicas:
 |---|---|
 | Sistema operativo | Windows 10 u 11 (x64) |
 | Runtime | Microsoft Edge WebView2 (suele venir preinstalado en Windows 10/11 recientes) |
-| Conexión | **No requiere internet**: la app y los datos son 100 % locales |
+| Conexión | **No necesita internet para trabajar**: la app y los datos son locales. Solo el aviso de actualizaciones y el envío de un reporte salen a internet, y ambos fallan sin problema si no hay conexión |
 | Cuenta | Se crea el administrador inicial al primer arranque; no hay servicio en la nube |
 
 ### Instalar en Windows
 
-1. Abra la [release más reciente](https://github.com/Leoglez10/Tae-Foto-P15/releases/tag/auto).
+1. Abra la [página de releases](https://github.com/Leoglez10/Tae-Foto-P15/releases/latest) y descargue el instalador de la versión más reciente.
 2. Descargue el instalador `.exe` (NSIS) o el paquete `.msi` para Windows x64.
 3. Si Windows bloquea el archivo, abra **Propiedades**, marque **Desbloquear**, aplique el cambio y vuelva a ejecutarlo.
 4. Inicie la aplicación y cambie de inmediato la cuenta inicial `admin` / `1234` desde **Administrador → Admins**.
-5. Haga un primer respaldo desde **Administrador → Importar → Respaldar base**.
+5. Haga un primer respaldo desde **Administrador → Configuración → Respaldar base**.
+
+> 💡 **Esta versión ya se actualiza sola.** La app busca versiones nuevas al abrir y le pide confirmación antes de descargar o instalar nada: nunca se cierra sin que usted lo autorice, y solo instala paquetes firmados. Lo ve en **Administrador → Configuración**.
+>
+> ⚠️ **Ojo con las computadoras que ya tienen la app instalada.** Las versiones anteriores **no** traen actualizador, así que en esas máquinas hay que instalar esta versión **a mano una vez**. Desde la siguiente, se actualizan solas.
 
 WebView2 suele venir instalado en Windows 10 y 11. Si la aplicación no abre o muestra una ventana vacía, instale el [runtime WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) y vuelva a intentarlo.
 
@@ -130,7 +151,7 @@ WebView2 suele venir instalado en Windows 10 y 11. Si la aplicación no abre o m
 1. [¿Qué es esta app?](#-qué-es-esta-app)
 2. [¿Para quién es?](#-para-quién-es)
 3. [Funciones principales](#-funciones-principales)
-4. [Vista rápida](#-vista-rápida)
+4. [Vista rápida](#️-vista-rápida)
 5. [Inicio rápido](#-inicio-rápido)
    - [Requisitos del sistema](#requisitos-del-sistema)
    - [Instalar en Windows](#instalar-en-windows)
@@ -165,7 +186,7 @@ WebView2 suele venir instalado en Windows 10 y 11. Si la aplicación no abre o m
 12. [Soporte](#-soporte)
 13. [Versionado](#-versionado)
 14. [Cómo contribuir](#-cómo-contribuir)
-15. [Licencia y uso](#-licencia-y-uso)
+15. [Licencia y uso](#️-licencia-y-uso)
 16. [Créditos](#-créditos)
 
 ---
@@ -190,7 +211,7 @@ Para el trabajo cotidiano solo necesita el modo **ESTUDIANTE**.
 3. Toque el **equipo** que se lleva en la cuadrícula de disponibles (puede buscarlo por número si hay muchos).
 4. Si quiere, escriba una **observación** (por ejemplo "funda raída").
 5. Toque **Registrar préstamo**.
-6. La pantalla muestra un aviso verde grande con el número de equipo. Se cierra solo a los 2 segundos; puede tocarla para continuar antes.
+6. La pantalla muestra un aviso grande con **PRESTAMO REGISTRADO** y el número de equipo. Se cierra solo a los 2 segundos; puede tocarlo para continuar antes.
 
 Listo. La app queda lista para el siguiente alumno: escanee otro código.
 
@@ -201,7 +222,7 @@ Listo. La app queda lista para el siguiente alumno: escanee otro código.
 1. En modo ESTUDIANTE, escanee el **código del alumno**.
 2. La app detecta que tiene un préstamo activo y cambia sola a modo devolución: muestra el equipo prestado y el botón rojo **Registrar devolución**.
 3. No hace falta elegir equipo (ya sabe cuál es). Agregue observaciones si hubo algún detalle.
-4. Toque **Registrar devolución**. El aviso azul confirma la devolución.
+4. Toque **Registrar devolución**. El aviso **EQUIPO DEVUELTO** confirma la devolución.
 
 Atajos útiles:
 
@@ -236,7 +257,7 @@ Atajos útiles:
 La primera vez existe una cuenta por defecto: usuario `admin`, contraseña `1234`.
 **Cámbiela antes de operar con datos reales**: entre a la sección **Admins**, edite la fila del usuario `admin`, escriba una contraseña nueva y guarde.
 
-Para salir, use **Cerrar sesión** (arriba a la derecha).
+Para salir, use **Cerrar sesión** —el botón rojo del panel administrador—.
 
 ### Secciones del panel
 
@@ -303,16 +324,16 @@ Errores comunes:
 
 | Mensaje / síntoma | Causa | Solución |
 |---|---|---|
-| "La hoja 'ALUMNOS' no tiene el formato correcto" | Encabezados cambiados, en otro orden o la hoja tiene otro nombre | Copie la plantilla de `templates/` y pegue sus datos respetando la primera fila |
+| "La hoja 'ALUMNOS' no tiene el formato correcto. Verifique los nombres y el orden de las columnas." | Encabezados cambiados, en otro orden o la hoja tiene otro nombre | Copie la plantilla de `templates/` y pegue sus datos respetando la primera fila |
 | "Turno invalido para el grupo…" | Turno vacío o distinto de MAT/VES | Escriba `MAT` o `VES` en la hoja GRUPOS |
-| "El archivo debe contener una hoja 'ALUMNOS'…" | El libro no trae ninguna hoja reconocible | Renombre las hojas exactamente a `ALUMNOS` y/o `GRUPOS` |
+| "El archivo debe contener una hoja 'ALUMNOS', una hoja 'GRUPOS' compatible o el formato legado 'GRUPOS' + 'REGISTRO'." | El libro no trae ninguna hoja reconocible | Renombre las hojas exactamente a `ALUMNOS` y/o `GRUPOS` |
 | Importé pero faltan materias en otro lado | El importador integrado solo llena alumnos y grupos | Es lo esperado; las tablas de materias/profesores son internas |
 
 > **Nota:** el libro real `REGISTRO FOTO.xlsm` de la escuela usa hojas `GRUPOS` y `BDD` y **no** entra por esta vía; para ese formato use el script PowerShell descrito en [Importación de datos: dos rutas](#importación-de-datos-dos-rutas), o pida a quien mantiene la app que lo convierta.
 
 ### Respaldos y restauración
 
-- **Respaldar base** (sección Importar): crea una copia completa en `%APPDATA%\com.institucion.prestamosequipos\backups\` con nombre `prestamos-backup-FECHA-HORA.sqlite`. Hágalo al menos una vez por semana y antes de importaciones grandes.
+- **Respaldar base** (sección **Configuración → Respaldos de la base**): crea una copia completa en `%APPDATA%\com.institucion.prestamosequipos\backups\` con nombre `prestamos-backup-FECHA-HORA.sqlite`. Hágalo al menos una vez por semana y antes de importaciones grandes.
 - **Restaurar base**: elige un archivo `.sqlite` o `.db` válido y reemplaza la base actual. La app valida tablas esenciales y crea un respaldo automático antes de reemplazar el archivo. Después de restaurar, confirme que alumnos, equipos y registros sean los esperados.
 - **Historial de respaldos**: la misma sección lista los archivos con fecha y tamaño, y permite abrir la carpeta.
 - También puede copiar el archivo de base manualmente (ver abajo). Con la aplicación cerrada.
@@ -335,7 +356,7 @@ Ruta completa típica: `C:\Users\<SU_USUARIO>\AppData\Roaming\com.institucion.pr
 ## ❓ Preguntas frecuentes
 
 **¿Necesita internet?**
-No. Todo es local: la base SQLite y los reportes se generan en la misma computadora, sin servidor ni telemetría. Solo la compilación oficial (GitHub Actions) descarga herramientas de Internet; la app ya instalada no.
+**Para trabajar, no.** La base SQLite y los reportes se generan en la misma computadora, sin servidor ni telemetría. **Dos funciones sí usan red, y solo cuando usted las activa**: buscar actualizaciones y enviar un reporte de problema. Si no hay conexión, la app funciona igual y esas dos avisan que no pudieron. La compilación oficial (GitHub Actions) es lo único que descarga herramientas de internet.
 
 **¿Dónde se guardan los datos?**
 En `%APPDATA%\com.institucion.prestamosequipos\prestamos.sqlite` (ver [Dónde viven los datos](#dónde-viven-los-datos)). Ese archivo es el que debe respaldar.
@@ -374,10 +395,10 @@ Sí, pero por la ruta B (script PowerShell), no por el importador del panel. Ver
 | Frontend | JavaScript vanilla (ES modules), sin framework ni bundler; `frontendDist` apunta directo a `../src` |
 | Base de datos | SQLite en `%APPDATA%\com.institucion.prestamosequipos\prestamos.sqlite`; esquema en `db/schema.sql` embebido con `include_str!` |
 | Empaquetado Windows | MSI + NSIS (`bundle.targets`), icono `icons/icon.ico` |
-| CI/CD | GitHub Actions (`windows-latest`, `tauri-apps/tauri-action@v0`, tag `auto`) |
+| CI/CD | GitHub Actions (`windows-latest`). Un push a `main` **pasa por un gate**: si trae commits `feat:` o `fix:` desde el último tag, sube la versión, commitea `release: vX.Y.Z` y publica una release versionada; si solo trae documentación, no publica nada. Corre los tests de Rust antes de publicar |
 | Identificador de app | `com.institucion.prestamosequipos` (ventana principal 1440×960, redimensionable, título "Prestamo de Equipos") |
 
-Permisos Tauri: capability `default` con `core:default` únicamente; la ventana accede al backend por comandos IPC (`invoke`). Sin plugins externos: la selección de archivos usa `<input type="file">` nativo.
+Permisos Tauri: capability `default` con `core:default` más los permisos del **actualizador** (`updater:allow-check`, `updater:allow-download-and-install`) y de **reinicio** (`process:allow-restart`). La ventana accede al backend por comandos IPC (`invoke`), y la selección de archivos usa `<input type="file">` nativo.
 
 ### Arquitectura de carpetas
 
@@ -393,21 +414,27 @@ taefoto/
 │   ├── icons.js                    # Iconos SVG inline
 │   ├── store/
 │   │   └── app-store.js            # Store único (estado global + acciones invoke)
+│   ├── updates/                    # Actualizador in-app
+│   │   ├── updateController.js     # Máquina de estados del actualizador (+tests)
+│   │   └── updateHistory.js        # Detecta el cambio de versión al reabrir
+│   ├── reports/
+│   │   └── reporteProblema.js      # Campos y límites del reporte (+tests)
 │   ├── components/
 │   │   └── app-shell.js            # Topbar, selección de rol, render por vista
 │   └── views/
 │       ├── operation-view.js       # Modo estudiante (préstamo/devolución)
-│       └── admin-view.js           # Panel admin (7 secciones)
+│       └── admin-view.js           # Panel admin (8 secciones, incluye Configuración)
 ├── src-tauri/
 │   ├── tauri.conf.json             # Identificador, ventana, bundle msi+nsis
 │   ├── Cargo.toml
-│   ├── capabilities/default.json   # core:default
+│   ├── capabilities/default.json   # core + updater + process
 │   └── src/
 │       ├── main.rs                 # Punto de entrada (oculta consola en release)
 │       ├── lib.rs                  # AppState, setup, migración de BD legada, handler
 │       ├── commands/
 │       │   ├── operation.rs        # 4 comandos de operación
-│       │   └── admin.rs            # 24 comandos de administración
+│       │   └── admin.rs            # 25 comandos de administración (incluye get_app_version)
+│       └── feedback.rs             # reportar_problema: envía el reporte al Worker
 │       ├── services/
 │       │   ├── mod.rs              # AppError/AppResult
 │       │   ├── operation.rs        # Lógica préstamo/devolución
@@ -416,8 +443,15 @@ taefoto/
 │       └── models/mod.rs           # DTOs serde compartidos con el frontend
 ├── scripts/
 │   ├── import_excel.ps1            # Importador PowerShell (Excel COM + Python)
+│   ├── release-gate.sh             # Decide si un push publica. No escribe nada
+│   ├── ci-bump-release.sh          # Sube la versión, commitea y pushea (lo corre la CI)
+│   ├── test-release-gate.sh        # Autochequeo del gate
 │   ├── inspect-db-Cargo.toml       # Manifiesto auxiliar de inspección (sin comando integrado)
 │   └── inspect_db.rs               # Fuente auxiliar para consultar una BD
+├── worker/                         # Worker de Cloudflare que abre los reportes como issues
+│   ├── wrangler.toml               # Nombre y limitador de 5 reportes por minuto
+│   ├── src/index.js                # Valida el reporte y crea el issue con el token
+│   └── README.md                   # Cómo desplegarlo y cómo rotar el token
 ├── templates/
 │   ├── solo_alumnos.xlsx           # Hoja ALUMNOS de ejemplo
 │   ├── solo_grupos.xlsx            # Hoja GRUPOS de ejemplo
@@ -482,7 +516,14 @@ Registrados en `lib.rs` (`invoke_handler`). Todos devuelven `Result<T, String>`.
 | Historial | `list_records(filters{alumno_query?, fecha_inicio?, fecha_fin?})` (límite 1000), `clear_records`, `export_records_csv(filters?)` |
 | Reportes | `get_report_data(request{report_type, ...})`, `generate_report_pdf(request)` |
 | Excel / BD | `import_excel_data(payload{file_name, bytes}) -> ExcelImportSummary`, `backup_database()`, `list_backups()`, `restore_database(payload)` |
-| Utilidades | `open_file_path(path)` (abre con `explorer.exe`) |
+| Utilidades | `open_file_path(path)` (abre con `explorer.exe`), `get_app_version() -> String` (la versión instalada, la lee del binario) |
+
+**Actualizador y reportes** (`lib.rs` y `feedback.rs`):
+
+| Comando | Firma | Función |
+|---|---|---|
+| `get_update_readiness` | `() -> &'static str` | `"ready"` en Windows x64 de release, `"development"` en debug, `"unsupported"` en el resto |
+| `feedback::reportar_problema` | `(payload{tipo, titulo, descripcion}) -> ()` | Envía el reporte al Worker de Cloudflare. La versión y el sistema operativo los agrega Rust, no el webview |
 
 ### Flujo de préstamo y devolución
 
@@ -612,20 +653,31 @@ Instalación reproducible, pruebas y build local:
 
 ```powershell
 npm ci
-cargo test --manifest-path .\src-tauri\Cargo.toml
+cargo test --manifest-path .\src-tauri\Cargo.toml            # tests de Rust
+node --test src/reports/reporteProblema.test.js src/updates/updateController.test.js   # tests del frontend
 npm run dev
 npm run build
 ```
+
+> `src-tauri/Cargo.lock` está en `.gitignore`, así que el lock no se versiona y cada equipo (y la CI) lo regenera. Es una limitación conocida de la reproducibilidad exacta del build.
 
 Los instaladores se generan bajo `src-tauri/target/release/bundle/` en las carpetas `msi/` y `nsis/`.
 
 Release automático (`.github/workflows/build-windows.yml`):
 
-- Disparadores: `push` a `main` (ignorando cambios solo en `README.md`) y ejecución manual (`workflow_dispatch`).
-- Runner `windows-latest`; Node 20, Bun, Rust stable con target `x86_64-pc-windows-msvc`, caché de Rust (`Swatinem/rust-cache`).
-- `tauri-apps/tauri-action@v0` publica MSI y NSIS en una release pública fija con `tagName: auto` y nombre `Prestamo de Equipos - Windows`.
-- El tag `auto` se reutiliza: la página de release permanece estable y los assets se reemplazan en cada build elegible. La versión del producto continúa siendo la declarada en `src-tauri/tauri.conf.json` (`0.1.0`).
-- Un cambio exclusivo de `README.md` no dispara instaladores; use `workflow_dispatch` si necesita reconstruirlos manualmente.
+- Disparadores: `push` a `main`, `push` de un tag `v*`, y ejecución manual (`workflow_dispatch`, que acepta un modo `dry_run` para decidir sin publicar).
+- **Un push a `main` pasa por un gate** (`scripts/release-gate.sh`): solo publica si desde el último tag hay algún commit `feat:` o `fix:`. Un push que solo trae documentación, estilo o mantenimiento **no genera versión ni publica nada**.
+- Cuando publica: `scripts/ci-bump-release.sh` sube el patch en los tres archivos que declaran la versión —`src-tauri/tauri.conf.json`, `package.json` y `src-tauri/Cargo.toml`—, commitea `release: vX.Y.Z` y pushea `main`.
+- El tag y la release los crea `tauri-apps/tauri-action@v0` con `tagName: v__VERSION__`, así que **nunca queda un tag sin release**: si el build falla, no queda rastro y el siguiente push lo reintenta.
+- Runner `windows-latest`; Node 20, Rust stable con target `x86_64-pc-windows-msvc`, caché de Rust (`Swatinem/rust-cache`).
+- **Corre `cargo test` antes de publicar**: un test en rojo impide que salga la release.
+- Publica MSI + NSIS firmados, junto con `latest.json`, que es el manifiesto que consulta el actualizador de la app.
+
+Para decidir a mano si un rango publicaría, sin publicar nada:
+
+```powershell
+bash scripts/release-gate.sh --range "$(git describe --tags --abbrev=0)..HEAD"
+```
 
 ### Desarrollo y depuración
 
@@ -637,8 +689,8 @@ npm run dev          # = tauri dev; abre la ventana con binario debug y devtools
 - Sin backend Tauri (por ejemplo abriendo `src/index.html` en navegador), el store detecta la ausencia de `invoke` y avisa: *"Tauri API no disponible. Abre la app con `npm run tauri dev`."*
 - Logs de depuración: `operation-view.js` imprime `[DEBUG]` en consola del webview durante el submit.
 - Para inspeccionar la BD sin abrir la app puede usar cualquier cliente SQLite contra la ruta de datos. El repositorio conserva `scripts/inspect_db.rs` y `scripts/inspect-db-Cargo.toml` como fuentes auxiliares, pero no ofrece un comando integrado o soportado para ejecutarlas desde `npm`.
-- Tests unitarios existentes (incluyen validación del importador): `cargo test --manifest-path .\src-tauri\Cargo.toml`.
-- El repositorio no define scripts de lint ni tests automatizados del frontend; una entrega debe complementar `cargo test` con una prueba manual del flujo préstamo → devolución → respaldo.
+- Tests unitarios de Rust: `cargo test --manifest-path .\src-tauri\Cargo.toml`.
+- Tests del frontend: `node --test src/reports/reporteProblema.test.js src/updates/updateController.test.js` (21 casos: validación del reporte y el controlador del actualizador). No hay `npm test`, ni linter, ni verificador de tipos; una entrega debe complementar los tests con una prueba manual del flujo préstamo → devolución → respaldo.
 - Atajos del shell: teclas `1`/`2` seleccionan rol en la pantalla inicial; `Esc` regresa al inicio.
 
 ### Respaldo y migración del esquema
@@ -797,13 +849,15 @@ Esta aplicación administra datos identificables de alumnos. Trate la base SQLit
 - Restrinja el acceso de Windows a `%APPDATA%\com.institucion.prestamosequipos\`.
 - No adjunte `prestamos.sqlite`, respaldos, libros `.xlsm`, CSV ni capturas con datos personales en issues públicos.
 - Mantenga al menos una copia de respaldo fuera del equipo de operación y pruebe periódicamente que pueda restaurarse.
-- Antes de distribuir la app en un entorno con más usuarios o equipos, priorice el hash de contraseñas, una CSP explícita y la firma de los instaladores.
+- Antes de distribuir la app en un entorno con más usuarios o equipos, priorice el hash de contraseñas y una CSP explícita. **La firma de los instaladores ya está implementada**, y es lo que permite que la app se actualice sola sin aceptar paquetes manipulados.
 
 La aplicación no sincroniza datos con un servidor. Esa operación local reduce exposición de red, pero **no sustituye** controles de acceso, respaldos ni protección física del equipo.
 
 ## 🆘 Soporte
 
-Para incidencias de operación, contacte primero al administrador local de la Preparatoria Quince. Para fallos técnicos reproducibles, abra un [issue en GitHub](https://github.com/Leoglez10/Tae-Foto-P15/issues) e incluya:
+**La forma más fácil de reportar un fallo es desde la propia app**: **Administrador → Configuración → Reportar un problema**. Ese camino adjunta solo la versión instalada y el sistema operativo, y abre el reporte como un issue **sin que usted necesite cuenta de GitHub**.
+
+Si prefiere hacerlo desde el navegador, use el [formulario guiado](https://github.com/Leoglez10/Tae-Foto-P15/issues/new/choose). En cualquiera de los dos casos incluya:
 
 1. Versión de Windows y versión de la app (`0.1.0` en la configuración actual).
 2. Pasos exactos para reproducir el problema.
@@ -823,7 +877,9 @@ Versionado simple `MAYOR.MENOR.PARCHE`. Actualmente **`0.1.0`**.
 
 > ✅ La versión debe coincidir en `package.json`, `src-tauri/tauri.conf.json` y `src-tauri/Cargo.toml`. Hoy los tres declaran `0.1.0`.
 
-> ℹ️ La release de GitHub reutiliza el tag fijo `auto`: la página del release permanece estable y los instaladores se reemplazan en cada build. El número de versión del producto no cambia solo por publicar.
+> ℹ️ Cada release tiene **su propio tag versionado** (`v0.1.1`, `v0.1.2`…). Cuando un push a `main` trae un `feat:` o un `fix:`, la CI sube el número de parche en los tres archivos, commitea `release: vX.Y.Z` y publica esa versión. Un push que solo trae documentación **no publica nada**.
+>
+> 💡 La app se actualiza sola: busca versiones nuevas al abrir y le pide confirmación antes de descargar. Solo instala paquetes firmados.
 
 ---
 
@@ -835,9 +891,12 @@ Versionado simple `MAYOR.MENOR.PARCHE`. Actualmente **`0.1.0`**.
 4. Verifica que compile y pase pruebas:
    ```powershell
    cargo test --manifest-path .\src-tauri\Cargo.toml
+   node --test src/reports/reporteProblema.test.js src/updates/updateController.test.js
    npm run build
    ```
 5. Abre un Pull Request explicando **qué** hiciste y **por qué**.
+
+> 📘 El detalle completo —cómo reportar un problema, convenciones del repo, qué se revisa en un PR— está en [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 > ⚠️ Nunca subas `prestamos.sqlite`, respaldos, Excel con datos reales ni capturas con información de alumnos. Revisa [Seguridad y privacidad](#-seguridad-y-privacidad) antes de tu primer commit.
 

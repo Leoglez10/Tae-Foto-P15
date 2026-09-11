@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "📖 Preguntas frecuentes"
+    url: "https://github.com/Leoglez10/Tae-Foto-P15#-preguntas-frecuentes"
+    about: "Revise respuestas sobre instalación, datos locales, respaldos, importación y problemas comunes."
+  - name: "⬇️ Descargar la versión más reciente"
+    url: "https://github.com/Leoglez10/Tae-Foto-P15/releases"
+    about: "Abra la página de Releases para descargar el instalador de Windows publicado por el proyecto."
+  - name: "🤝 Guía para reportar o contribuir"
+    url: "https://github.com/Leoglez10/Tae-Foto-P15/blob/main/CONTRIBUTING.md"
+    about: "Lea cómo reportar problemas, proponer mejoras o preparar un Pull Request."

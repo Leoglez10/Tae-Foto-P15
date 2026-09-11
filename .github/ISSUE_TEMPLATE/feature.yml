@@ -1,0 +1,68 @@
+name: "💡 Sugerir una mejora"
+description: "Proponga una idea para mejorar Prestamo de Equipos."
+title: "[Mejora]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Cualquier persona puede proponer una mejora para la app: docentes, personal escolar, administradores o soporte. No necesita saber programar.
+
+        Describa la idea con sus palabras y explique qué problema ayudaría a resolver.
+
+  - type: dropdown
+    id: pantalla
+    attributes:
+      label: "¿A qué área pertenece la sugerencia?"
+      options:
+        - "Préstamo de equipos (escaneo de alumnos)"
+        - "Alumnos"
+        - "Equipos"
+        - "Reportes"
+        - "Importar Excel"
+        - "Respaldos"
+        - "Actualizaciones"
+        - "Acceso al panel"
+        - "No estoy seguro"
+    validations:
+      required: true
+
+  - type: textarea
+    id: mejora
+    attributes:
+      label: "¿Qué le gustaría que hiciera la app?"
+      description: "Explique la mejora o cambio que propone."
+      placeholder: "Me gustaría que la app..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solucion-actual
+    attributes:
+      label: "¿Cómo lo resuelve hoy? (opcional)"
+      description: "Si ahora usa una libreta, Excel, mensajes o un proceso manual, puede contarlo aquí."
+      placeholder: "Actualmente lo hacemos con..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: utilidad
+    attributes:
+      label: "¿Por qué sería útil?"
+      description: "Diga a quién ayudaría y qué trabajo ahorraría o haría más seguro."
+      placeholder: "Sería útil porque..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: rol
+    attributes:
+      label: "¿Cómo usa la app?"
+      options:
+        - "Docente"
+        - "Personal escolar"
+        - "Administrador del panel"
+        - "Soporte técnico"
+        - "Otro"
+    validations:
+      required: true

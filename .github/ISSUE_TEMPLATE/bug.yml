@@ -1,0 +1,102 @@
+name: "🐛 Reportar un problema"
+description: "Algo no funcionó como debería en Prestamo de Equipos."
+title: "[Problema]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por avisar. No necesita conocimientos técnicos: complete solo lo que sepa.
+
+        Si puede abrir el panel, la forma más fácil es usar **Admin → Configuración → Reportar un problema** dentro de la app. Ese botón envía automáticamente la versión de la aplicación y el sistema operativo.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Privacidad de alumnos
+
+        **No pegue ni adjunte datos personales de alumnos en este ticket público.** No incluya nombres de alumnos, códigos de alumno, la base de datos SQLite, respaldos ni contenido del Excel de importación.
+
+        En su lugar, escriba el mensaje de error y diga en qué pantalla ocurrió. Si agrega una captura, cubra o recorte cualquier dato de alumnos antes de subirla.
+
+  - type: dropdown
+    id: pantalla
+    attributes:
+      label: "¿Dónde ocurrió?"
+      description: "Elija la sección más cercana al problema."
+      options:
+        - "Préstamo de equipos (escaneo de alumnos)"
+        - "Alumnos"
+        - "Equipos"
+        - "Reportes"
+        - "Importar Excel"
+        - "Respaldos"
+        - "Actualizaciones"
+        - "Acceso al panel"
+        - "No estoy seguro"
+    validations:
+      required: true
+
+  - type: textarea
+    id: intento
+    attributes:
+      label: "¿Qué estaba intentando hacer?"
+      description: "Cuente la acción concreta, sin incluir datos personales de alumnos."
+      placeholder: "Ejemplo: registrar una devolución, abrir Reportes, importar una plantilla de Excel..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: ocurrio
+    attributes:
+      label: "¿Qué ocurrió?"
+      description: "Explique lo que pasó. Si apareció un mensaje de error, copie solo el mensaje, sin datos de alumnos."
+      placeholder: "La app mostró..., se cerró..., no avanzó..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: esperado
+    attributes:
+      label: "¿Qué esperaba que pasara? (opcional)"
+      description: "Si es claro, describa el resultado que esperaba."
+      placeholder: "Esperaba que..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: frecuencia
+    attributes:
+      label: "¿Con qué frecuencia pasa?"
+      options:
+        - "Pasa cada vez que intento esa acción"
+        - "Pasa algunas veces"
+        - "Solo me pasó una vez"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: windows
+    attributes:
+      label: "Versión de Windows"
+      options:
+        - "Windows 11"
+        - "Windows 10"
+        - "Otra / no estoy seguro"
+    validations:
+      required: true
+
+  - type: input
+    id: version-app
+    attributes:
+      label: "Versión de la app (opcional)"
+      description: "Puede verla en Admin → Configuración. Si usa el botón interno de reporte, este dato se envía automáticamente."
+      placeholder: "Ejemplo: 0.1.0"
+
+  - type: textarea
+    id: captura
+    attributes:
+      label: "Captura de pantalla (opcional)"
+      description: "Arrastre una imagen aquí solo si no muestra datos de alumnos. Cubra nombres, códigos y grupos antes de subirla."
+    validations:
+      required: false
