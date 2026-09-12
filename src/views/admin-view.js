@@ -66,6 +66,13 @@ function sidebarMarkup(state) {
 
   return `
     <nav class="admin-sidebar" aria-label="Secciones del administrador">
+      <div class="admin-sidebar-brand">
+        <img src="./logo-p15.png" alt="" class="admin-sidebar-logo" />
+        <div class="admin-sidebar-brand-text">
+          <span class="admin-sidebar-kicker">TAE Foto App</span>
+          <strong>Panel de control</strong>
+        </div>
+      </div>
       <div class="admin-user">
         <span class="admin-avatar" aria-hidden="true">${initial}</span>
         <div class="admin-user-text">
@@ -74,6 +81,10 @@ function sidebarMarkup(state) {
         </div>
       </div>
       ${navGroups}
+      <div class="admin-sidebar-actions">
+        <button class="ghost-btn" type="button" data-action="go-home" aria-label="Volver al inicio">Volver al inicio</button>
+        <button class="btn-danger" type="button" data-action="logout-admin" aria-label="Cerrar sesion">${icon("out")} Cerrar sesion</button>
+      </div>
     </nav>
   `;
 }
@@ -1249,6 +1260,7 @@ export function renderAdminView(root, store) {
             <button class="btn btn-block" type="submit">INGRESAR</button>
           </form>
           <p class="login-note">Solo personal autorizado de la Preparatoria Quince.</p>
+          <button class="ghost-btn login-back" type="button" data-action="go-home">Volver al inicio</button>
         </article>
       </section>
     `;

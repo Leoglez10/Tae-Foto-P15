@@ -155,12 +155,17 @@ export function createAppShell(root, store) {
 
     root.innerHTML = `
       <a href="#main-content" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:9999;">Saltar al contenido principal</a>
-      <div class="app-shell ${state.role === "student" ? "fit" : ""}">
+      <div class="app-shell ${state.role === "student" ? "fit" : ""} ${state.role === "admin" ? "admin-mode" : ""}">
         <div class="ambient-orb orb-a"></div>
         <div class="ambient-orb orb-b"></div>
         <div class="ambient-grid"></div>
         ${updateNoticeMarkup(state)}
-        <header class="topbar" role="banner">
+        ${
+          // The admin shell owns its own chrome: branding, identity and session
+          // actions live in the sidebar. Every other mode keeps the shared topbar.
+          state.role === "admin"
+            ? ""
+            : `<header class="topbar" role="banner">
           <div class="brand-lockup">
             <div class="logo-placeholder">
               <img src="./logo-p15.png" alt="Logo Preparatoria Quince" class="brand-logo" />
@@ -173,22 +178,13 @@ export function createAppShell(root, store) {
           </div>
           <div class="topbar-actions">
             ${
-              state.currentAdmin
-                ? `<span class="topbar-session">${icon("user")} ${state.currentAdmin.nombre || state.currentAdmin.usuario}</span>`
-                : ""
-            }
-            ${
               state.role
                 ? `<button class="ghost-btn" type="button" data-action="go-home" aria-label="Volver al inicio">Inicio</button>`
                 : ""
             }
-            ${
-              state.currentAdmin
-                ? `<button class="btn-danger" type="button" data-action="logout-admin" aria-label="Cerrar sesion">${icon("out")} Cerrar sesion</button>`
-                : ""
-            }
           </div>
-        </header>
+        </header>`
+        }
         <main class="content" id="main-content" tabindex="-1"></main>
       </div>
     `;
@@ -231,13 +227,18 @@ export function createAppShell(root, store) {
       });
     }
 
-    root.querySelector("[data-action='go-home']")?.addEventListener("click", () => {
-      store.actions.setRole(null);
+    root.querySelectorAll("[data-action='go-home']").forEach((button) => {
+      button.addEventListener("click", () => {
+        store.actions.setRole(null);
+      });
     });
 
-    root.querySelector("[data-action='logout-admin']")?.addEventListener("click", () => {
-      store.actions.logoutAdmin();
+    root.querySelectorAll("[data-action='logout-admin']").forEach((button) => {
+      button.addEventListener("click", () => {
+        store.actions.logoutAdmin();
+      });
     });
+
     root.querySelectorAll("[data-update-check='true']").forEach((button) => {
       button.addEventListener("click", () => {
         void store.actions.checkForUpdates();
