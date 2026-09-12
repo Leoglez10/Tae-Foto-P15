@@ -55,18 +55,23 @@ jobs:
         run: |
           set -euo pipefail
           # Estos modulos usan `export` y se sirven tal cual, sin bundler, asi que hay
-          # que parsearlos como ESM. Se intentan dos caminos independientes porque el
-          # parser varia entre builds de Node; si el archivo esta realmente roto,
-          # fallan los dos.
+          # que parsearlos como ESM: `node --check` decide por la extension, y por eso
+          # cada archivo se copia a un .mjs temporal.
+          #
+          # Nota historica, porque esto se diagnostico mal cuatro veces seguidas: se
+          # creyo que el problema era Node (que si no parseaba ESM) y se cambiaron el
+          # parser y la version de Node sin necesidad. La causa era el archivo: el
+          # app-shell.js commiteado tenia los helpers metidos dentro de una funcion.
+          # Los commits "el chequeo de sintaxis no funcionaba en Node 20" y "Node 24 en
+          # lugar de 20" dicen cualquier cosa; este chequeo tenia razon las 4 veces.
+          # Si vuelve a fallar, lo mas probable es que el archivo este mal.
           tmp_dir="$(mktemp -d)"
           trap 'rm -rf "$tmp_dir"' EXIT
           fallidos=0
           while IFS= read -r file; do
             cp "$file" "$tmp_dir/check.mjs"
-            if node --check "$tmp_dir/check.mjs" 2>/dev/null; then continue; fi
-            if node --input-type=module --check < "$file" 2>/dev/null; then continue; fi
+            if node --check "$tmp_dir/check.mjs"; then continue; fi
             echo "::error::Error de sintaxis en $file"
-            node --check "$tmp_dir/check.mjs" 2>&1 | head -5 || true
             fallidos=$((fallidos + 1))
           done < <(git ls-files 'src/**/*.js' 'src/*.js')
           if [ "$fallidos" -gt 0 ]; then
@@ -79,6 +84,18 @@ jobs:
         if: steps.gate.outputs.should_release == 'true'
         shell: bash
         run: bash scripts/test-release-gate.sh
+
+      - name: Test release bump
+        if: steps.gate.outputs.should_release == 'true'
+        shell: bash
+        run: bash scripts/test-ci-bump-release.sh
+
+      # Hasta ahora el unico test que corria en CI era `cargo test`: estos dos modulos
+      # tienen 21 tests propios que no los ejecutaba nadie.
+      - name: Test frontend modules
+        if: steps.gate.outputs.should_release == 'true'
+        shell: bash
+        run: node --test "src/**/*.test.js"
 
       - name: Bump release version
         id: bump
