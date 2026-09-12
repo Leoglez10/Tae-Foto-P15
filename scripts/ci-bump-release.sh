@@ -22,37 +22,75 @@ PACKAGE_JSON="package.json"
 CARGO_TOML="src-tauri/Cargo.toml"
 TRACKED_VERSION_FILES=("$TAURI_CONF" "$PACKAGE_JSON" "$CARGO_TOML")
 
-json_uses_crlf() {
-  LC_ALL=C grep -q $'\r' "$1"
-}
-
-json_uses_tabs() {
-  grep -Eq $'^\t+"' "$1"
-}
-
+# Reemplaza SOLO el valor de la clave "version" de nivel superior, sin tocar el resto
+# del archivo. Antes esto usaba jq, que re-serializa el JSON entero con su propio
+# estilo: expandia los arrays en linea del tauri.conf.json y metia ruido en el diff
+# de cada release.
 write_json_version() {
   local file="$1"
   local version="$2"
-  local tmp
-  tmp="$(mktemp)"
-
-  if json_uses_tabs "$file"; then
-    jq --tab --arg version "$version" '.version = $version' "$file" > "$tmp"
-  else
-    jq --arg version "$version" '.version = $version' "$file" > "$tmp"
-  fi
-
-  if json_uses_crlf "$file"; then
-    python3 - "$tmp" <<'PY'
+  python3 - "$file" "$version" <<'PY'
 from pathlib import Path
+import json
+import re
 import sys
-path = Path(sys.argv[1])
-text = path.read_text(encoding="utf-8")
-path.write_text(text.replace("\n", "\r\n"), encoding="utf-8", newline="")
-PY
-  fi
 
-  cat "$tmp" > "$file"
+path = Path(sys.argv[1])
+new_version = sys.argv[2]
+# newline="" para leer los saltos de linea tal cual: con la traduccion por defecto,
+# un archivo con CRLF se convertiria a LF sin que nadie lo pida.
+with open(path, encoding="utf-8", newline="") as handle:
+    text = handle.read()
+
+
+def net_depth(line):
+    """Llaves y corchetes de la linea, ignorando los que van dentro de un string."""
+    depth = 0
+    in_string = False
+    escaped = False
+    for char in line:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+        elif char == '"':
+            in_string = True
+        elif char in "{[":
+            depth += 1
+        elif char in "}]":
+            depth -= 1
+    return depth
+
+
+pattern = re.compile(r'^(\s*"version"\s*:\s*)"[^"]*"(.*)$')
+lines = text.split("\n")
+depth = 0
+for index, line in enumerate(lines):
+    # La clave de nivel superior vive a profundidad 1: la abre el `{` del inicio.
+    if depth == 1:
+        match = pattern.match(line)
+        if match:
+            lines[index] = f'{match.group(1)}"{new_version}"{match.group(2)}'
+            break
+    depth += net_depth(line)
+else:
+    raise SystemExit(f'no se encontro la clave "version" de nivel superior en {path}')
+
+updated = "\n".join(lines)
+
+# Lo de arriba toca una sola linea. Esto lo comprueba en vez de confiar: el JSON
+# tiene que seguir siendo valido y no puede haber cambiado nada mas que la version.
+before = json.loads(text)
+after = json.loads(updated)
+before["version"] = new_version
+if before != after:
+    raise SystemExit(f"el bump cambio algo mas que la version en {path}")
+
+path.write_text(updated, encoding="utf-8", newline="")
+PY
 }
 
 write_cargo_toml_version() {
