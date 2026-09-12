@@ -49,8 +49,11 @@ jobs:
           bash scripts/release-gate.sh | tee release-gate.out
           cat release-gate.out >> "$GITHUB_OUTPUT"
 
+      # Los chequeos y los tests de abajo corren siempre, aunque el gate decida que no
+      # corresponde release: son baratos en ubuntu y avisan de un archivo roto antes de
+      # que el proximo push intente publicar. Lo unico condicionado es el bump, que
+      # commitea y pushea.
       - name: Syntax-check frontend modules
-        if: steps.gate.outputs.should_release == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -81,19 +84,16 @@ jobs:
           echo "Sintaxis OK en todos los modulos del frontend"
 
       - name: Test release gate
-        if: steps.gate.outputs.should_release == 'true'
         shell: bash
         run: bash scripts/test-release-gate.sh
 
       - name: Test release bump
-        if: steps.gate.outputs.should_release == 'true'
         shell: bash
         run: bash scripts/test-ci-bump-release.sh
 
       # Hasta ahora el unico test que corria en CI era `cargo test`: estos dos modulos
       # tienen 21 tests propios que no los ejecutaba nadie.
       - name: Test frontend modules
-        if: steps.gate.outputs.should_release == 'true'
         shell: bash
         run: node --test "src/**/*.test.js"
 
