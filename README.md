@@ -672,6 +672,7 @@ Release automático (`.github/workflows/build-windows.yml`):
 - Runner `windows-latest`; Node 20, Rust stable con target `x86_64-pc-windows-msvc`, caché de Rust (`Swatinem/rust-cache`).
 - **Corre `cargo test` antes de publicar**: un test en rojo impide que salga la release.
 - Publica MSI + NSIS firmados, junto con `latest.json`, que es el manifiesto que consulta el actualizador de la app.
+- Adjunta a esa misma release el **manual del personal en PDF** (`manual-personal-taefoto.pdf`), generado desde `docs/MANUAL_PERSONAL.md` con la versión de la release en la portada. El job `build-manual` solo corre cuando el gate publica y el build de Windows terminó bien. Para generarlo en local: `python3 -m pip install -r docs/manual-pdf-requirements.txt` y `npm run docs:pdf` (sale en `output/pdf/`).
 
 Para decidir a mano si un rango publicaría, sin publicar nada:
 

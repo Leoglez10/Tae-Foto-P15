@@ -6,7 +6,8 @@
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",
-    "build": "tauri build"
+    "build": "tauri build",
+    "docs:pdf": "python3 scripts/build-manual-pdf.py"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.1.0"

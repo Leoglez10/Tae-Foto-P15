@@ -12,6 +12,9 @@ prestamos.sqlite
 *.sqlite
 *.sqlite3
 
+# Generated staff manual PDF (npm run docs:pdf; the CI attaches it to each release)
+output/
+
 # Env
 .env
 .env.local

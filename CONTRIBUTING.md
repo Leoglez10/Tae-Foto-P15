@@ -72,6 +72,7 @@ Para abrir el Pull Request, sube tu rama a tu fork y explica qué cambiaste, por
 npm run tauri
 npm run dev
 npm run build
+npm run docs:pdf   # manual del personal en PDF; requiere: python3 -m pip install -r docs/manual-pdf-requirements.txt
 ```
 
 No inventes comandos como `npm test`, `npm run lint` o `npm run typecheck`: este repositorio no los define.
@@ -110,6 +111,7 @@ El flujo actual vive en `.github/workflows/build-windows.yml`:
 - La preparación corre en Ubuntu y usa `scripts/release-gate.sh`; si corresponde publicar, revisa sintaxis de módulos JavaScript con `node --check`, ejecuta `scripts/test-release-gate.sh` y puede correr `scripts/ci-bump-release.sh`.
 - La compilación final corre en `windows-latest`, instala dependencias con `npm install`, instala Rust estable con target `x86_64-pc-windows-msvc`, ejecuta `cargo test --manifest-path src-tauri/Cargo.toml` y publica con `tauri-apps/tauri-action@v0` cuando el gate lo permite.
 - La release usa instaladores Windows y updater JSON firmados; no publiques releases manuales sin revisar ese flujo.
+- El job `build-manual` (Ubuntu) genera el manual del personal en PDF desde `docs/MANUAL_PERSONAL.md` y lo adjunta a esa misma release como `manual-personal-taefoto.pdf`. Solo corre cuando el gate publica y `build-tauri` terminó bien. Si cambias pantallas o flujos que usa el personal, actualiza también el manual.
 
 ### Antes de pedir revisión
 
