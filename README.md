@@ -22,7 +22,6 @@
 [**📂 Repositorio**](https://github.com/Leoglez10/Tae-Foto-P15) ·
 [**🐞 Reportar un problema**](https://github.com/Leoglez10/Tae-Foto-P15/issues/new/choose)
 
-[![Built with Gentle-AI](https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/docs/assets/brand/built-with-gentle-ai.png)](https://github.com/Gentleman-Programming/gentle-ai)
 </div>
 
 ---
@@ -941,5 +940,12 @@ Proyecto de **uso interno educativo** para la Preparatoria Quince.
 **¿Dudas?** [Preguntas frecuentes](#-preguntas-frecuentes) · [Si algo falla](#si-algo-falla) · [Respaldos y restauración](#respaldos-y-restauración) · [Problemas conocidos](#problemas-conocidos) · [Soporte](#-soporte)
 
 Hecho con 💙 para la comunidad de la **Preparatoria Quince** — *respalda siempre* 💾
+
+</div>
+---
+
+<div align="center">
+
+<a href="https://github.com/Gentleman-Programming/gentle-ai"><img src="https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/docs/assets/brand/built-with-gentle-ai.png" alt="Built with Gentle-AI" width="120" /></a>
 
 </div>
